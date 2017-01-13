@@ -88,7 +88,7 @@ class KevinAI implements EuchreAI {
 		return getWorstCardInHand(hand, undefined, trump);
 	}
 
-	public pickTrump(hand: Card[], trumpCandidate: Card): Suit | null {
+	public pickTrump(hand: Card[], _trumpCandidate: Card): Suit | null {
 		const suitResults: number[] = [];
 		for (const suit of this.suits) {
 			const counts = {
@@ -106,19 +106,13 @@ class KevinAI implements EuchreAI {
 			}
 
 			for (const card of hand) {
-				this.evaluateCard(card, trumpCandidate.suit, hasTrump, hasSuit, counts);
-			}
-
-			if (this.amDealer) {
-				this.evaluateCard(trumpCandidate, trumpCandidate.suit, hasTrump,
-					hasSuit, counts);
+				this.evaluateCard(card, suit, hasTrump, hasSuit, counts);
 			}
 
 			//TODO: set goAlone
 			if (counts.trumpCount >= 4) {
 				suitResults[suit] = 3;
-			}
-			if (hasTrump[Rank.Right]) {
+			} else if (hasTrump[Rank.Right]) {
 				if (counts.trumpCount >= 3) {
 					suitResults[suit] = 2;
 				}
@@ -126,12 +120,14 @@ class KevinAI implements EuchreAI {
 					&& counts.suitCount <= 3) {
 					suitResults[suit] = 1;
 				}
+			} else {
+				suitResults[suit] = 0;
 			}
-			suitResults[suit] = 0;
 		}
 		for (let minValue = 3; minValue > 0; minValue--) {
 			for (const suit of this.suits) {
 				if (suitResults[suit] >= minValue) {
+					this.goAlone = this.shouldGoAlone(hand, suit);
 					return suit;
 				}
 			}
@@ -140,7 +136,6 @@ class KevinAI implements EuchreAI {
 	}
 
 	public chooseGoAlone(_hand: Card[], _trump: Suit): boolean {
-		animShowText("***KJL: skipped going alone", MessageLevel.Step);
 		return this.goAlone;
 	}
 
@@ -225,5 +220,37 @@ class KevinAI implements EuchreAI {
 			hasSuit[card.suit] = true;
 			counts.suitCount++;
 		}
+	}
+
+	private shouldGoAlone(hand: Card[], suit: Suit): boolean {
+		const hasHighestCard: boolean[] = [];
+		const loserCounts: number[] = [];
+		for (let i = 0; i < 4; i++) {
+			hasHighestCard[i] = false;
+			loserCounts[i] = 0;
+		}
+		for (const card of hand) {
+			if (card.suit === suit) {
+				if (card.rank === Rank.Jack) {
+					hasHighestCard[card.suit] = true;
+				}
+			} else if (card.suit === getOppositeSuit(suit) && card.rank === Rank.Jack) {
+				// Nothing to do
+			} else if (card.rank === Rank.Ace) {
+				hasHighestCard[card.suit] = true;
+			} else {
+				const losesBy = Rank.Ace - card.rank;
+				if (loserCounts[card.suit] === 0 || loserCounts[card.suit] > losesBy) {
+					loserCounts[card.suit] = losesBy;
+				}
+			}
+		}
+		let loserCount = 0;
+		for (let i = 0; i < 4; i++) {
+			if (!hasHighestCard[i]) {
+				loserCount += loserCounts[i];
+			}
+		}
+		return loserCount <= 1;
 	}
 }
