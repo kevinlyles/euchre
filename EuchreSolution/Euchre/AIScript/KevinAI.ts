@@ -52,6 +52,10 @@ class KevinAI implements EuchreAI {
 				&& counts.suitCount <= 3 && (amDealer || goesToPartner)) {
 				return true;
 			}
+			if (counts.trumpCount >= 2 && counts.offAceCount >= 2
+				&& (amDealer || goesToPartner)) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -121,11 +125,13 @@ class KevinAI implements EuchreAI {
 			} else if (hasTrump[Rank.Right]) {
 				if (counts.trumpCount >= 3) {
 					suitResults[suit] = 2;
-				}
-				if (counts.trumpCount >= 2 && counts.offAceCount >= 1
+				} else if (counts.trumpCount >= 2 && counts.offAceCount >= 1
 					&& counts.suitCount <= 3) {
 					suitResults[suit] = 1;
+				} else if (counts.trumpCount >= 2 && counts.offAceCount >= 2) {
+					suitResults[suit] = 1;
 				}
+
 			} else {
 				suitResults[suit] = 0;
 			}
