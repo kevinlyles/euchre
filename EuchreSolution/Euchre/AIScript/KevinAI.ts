@@ -114,7 +114,6 @@ class KevinAI implements EuchreAI {
 				this.evaluateCard(card, suit, hasTrump, hasSuit, counts);
 			}
 
-			//TODO: set goAlone
 			if (counts.trumpCount >= 4) {
 				suitResults[suit] = 3;
 			} else if (hasTrump[Rank.Right]) {
