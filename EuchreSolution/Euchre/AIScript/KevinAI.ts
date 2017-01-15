@@ -94,6 +94,7 @@ class KevinAI implements EuchreAI {
 
 	public pickTrump(): Suit | null {
 		let hand: Card[] = game.myHand();
+		let trumpCandidate = game.getTrumpCandidateCard() as Card;
 		let suitResults: number[] = [];
 		for (let suit of this.suits) {
 			let counts = {
@@ -130,6 +131,9 @@ class KevinAI implements EuchreAI {
 		}
 		for (let minValue = 3; minValue > 0; minValue--) {
 			for (let suit of this.suits) {
+				if (suit === trumpCandidate.suit) {
+					continue;
+				}
 				if (suitResults[suit] >= minValue) {
 					this.goAlone = this.shouldGoAlone(hand, suit);
 					return suit;
