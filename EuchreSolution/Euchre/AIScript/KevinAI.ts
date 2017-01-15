@@ -88,7 +88,7 @@ class KevinAI implements EuchreAI {
 		return getWorstCardInHand(hand, undefined, trump);
 	}
 
-	public pickTrump(hand: Card[], _trumpCandidate: Card): Suit | null {
+	public pickTrump(hand: Card[], trumpCandidate: Card): Suit | null {
 		const suitResults: number[] = [];
 		for (const suit of this.suits) {
 			const counts = {
@@ -125,6 +125,9 @@ class KevinAI implements EuchreAI {
 		}
 		for (let minValue = 3; minValue > 0; minValue--) {
 			for (const suit of this.suits) {
+				if (suit === trumpCandidate.suit) {
+					continue;
+				}
 				if (suitResults[suit] >= minValue) {
 					this.goAlone = this.shouldGoAlone(hand, suit);
 					return suit;
@@ -144,7 +147,7 @@ class KevinAI implements EuchreAI {
 			shouldLeadTrump = maker === this.me || maker === getPartner(this.me);
 		}
 		if (trickSoFar.length > 0) {
-			const trickSuit: Suit = trickSoFar[0].card.suit;
+			const trickSuit = trickSoFar[0].card.suit;
 			if (trickSuit === trump) {
 				this.trumpHasBeenLead = true;
 			}
