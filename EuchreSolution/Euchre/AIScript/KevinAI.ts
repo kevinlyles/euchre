@@ -32,6 +32,7 @@ class KevinAI implements EuchreAI {
 		}
 
 		this.amDealer = this.me === dealer;
+		let goesToPartner = getPartner(this.me) === dealer;
 		if (this.amDealer) {
 			this.evaluateCard(trumpCandidate, trumpCandidate.suit, hasTrump,
 				hasSuit, counts);
@@ -46,7 +47,7 @@ class KevinAI implements EuchreAI {
 				return true;
 			}
 			if (counts.trumpCount >= 2 && counts.offAceCount >= 1
-				&& counts.suitCount <= 3 && this.amDealer) {
+				&& counts.suitCount <= 3 && (this.amDealer || goesToPartner)) {
 				return true;
 			}
 		}
