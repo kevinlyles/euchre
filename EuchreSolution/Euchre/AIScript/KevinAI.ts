@@ -58,10 +58,37 @@ class KevinAI implements EuchreAI {
 
 		let lowestCard: Card | null = null;
 		for (let suit of suitsArray) {
+			if (suit === trumpSuit || lowestCards[suit] === undefined) {
+				continue;
+			}
 			if (suitCounts[suit] == 1 && !hasAce[suit]) {
 				if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
 					lowestCard = lowestCards[suit];
 				}
+			}
+		}
+		if (lowestCard) {
+			return lowestCard;
+		}
+		for (let suit of suitsArray) {
+			if (suit === trumpSuit || lowestCards[suit] === undefined) {
+				continue;
+			}
+			if (!hasAce[suit]) {
+				if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
+					lowestCard = lowestCards[suit];
+				}
+			}
+		}
+		if (lowestCard) {
+			return lowestCard;
+		}
+		for (let suit of suitsArray) {
+			if (suit === trumpSuit || lowestCards[suit] === undefined) {
+				continue;
+			}
+			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
+				lowestCard = lowestCards[suit];
 			}
 		}
 		if (lowestCard) {
