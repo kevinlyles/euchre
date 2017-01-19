@@ -87,10 +87,10 @@ class Controller {
 
 		//ai settings
 		this.__settings.aiPlayers = [
-			new KevinAI(),
 			new MultiAI(new KevinAI(), new DecentAI()),
-			new KevinAI(),
+			new MultiAI(new DecentAI(), new KevinAI()),
 			new MultiAI(new KevinAI(), new DecentAI()),
+			new MultiAI(new DecentAI(), new KevinAI()),
 		];
 		this.__settings.hasHooman = this.__settings.aiPlayers.indexOf(null) > -1;
 
