@@ -170,9 +170,9 @@ class Game {
 		//ai settings
 		this.__statMode = true //(document.getElementById("chkStatMode") as HTMLInputElement).checked; //4 AIs play against each other
 		if (this.__statMode) {
-			this.__numGamesToPlay = 1;
+			this.__numGamesToPlay = 1000;
 			this.__gameCounter = 1;
-			this.__messageLevel = MessageLevel.Step;
+			this.__messageLevel = MessageLevel.Multigame;
 		}
 		//else this.__messageLevel = (document.getElementById("chkStatMode") as HTMLInputElement).checked;
 		this.__aiPlayers = [new DecentAI(), new IdiotAI(), new DecentAI(), new IdiotAI()];
