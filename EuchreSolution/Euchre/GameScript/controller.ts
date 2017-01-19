@@ -64,7 +64,7 @@ class Controller {
 			messageLevel: MessageLevel.Step,
 			aiPlayers: [null, null, null, null],
 			hasHooman: false,
-			numGamesToPlay: 1,
+			numGamesToPlay: 1000,
 		};
 		this.__nsTotalScore = 0;
 		this.__ewTotalScore = 0;
@@ -97,7 +97,7 @@ class Controller {
 		//statMode: 4 AIs play against each other
 		this.__settings.statMode = true; //(document.getElementById("chkStatMode") as HTMLInputElement).checked;
 		this.__settings.messageLevel = MessageLevel.Step;
-		this.__settings.numGamesToPlay = 1;
+		this.__settings.numGamesToPlay = 1000;
 	}
 
 	private handleEndGame(): void {
