@@ -177,9 +177,9 @@ class Game {
 		//else this.__messageLevel = (document.getElementById("chkStatMode") as HTMLInputElement).checked;
 		this.__aiPlayers = [
 			new MultiAI(new KevinAI(), new DecentAI()),
-			new MultiAI(new DecentAI(), new KevinAI()),
+			new KevinAI(),
 			new MultiAI(new KevinAI(), new DecentAI()),
-			new MultiAI(new DecentAI(), new KevinAI()),
+			new KevinAI(),
 		];
 		this.__hasHooman = this.__aiPlayers.indexOf(null) > -1;
 	}
