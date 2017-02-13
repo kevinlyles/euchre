@@ -247,7 +247,12 @@ class Game {
 			this.__messageLevel = MessageLevel.Multigame;
 		}
 		//else this.__messageLevel = (document.getElementById("chkStatMode") as HTMLInputElement).checked;
-		this.__aiPlayers = [new KevinAI(), new DecentAI(), new KevinAI(), new DecentAI()];
+		this.__aiPlayers = [
+			new KevinAI(),
+			new KevinAIOld(),
+			new KevinAI(),
+			new KevinAIOld(),
+		];
 		this.__hasHooman = this.__aiPlayers.indexOf(null) > -1;
 	}
 
