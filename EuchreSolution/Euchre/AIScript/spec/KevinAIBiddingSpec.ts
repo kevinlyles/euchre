@@ -94,8 +94,6 @@ function testBidding(description: string, hand: Card[], trumpCandidate: Card,
 }
 
 describe("Kevin AI Bidding", function () {
-	game = new Game();
-
 	describe("Smoke tests", function () {
 		it("Can be instantiated", function () {
 			expect(new KevinAI()).toBeDefined();

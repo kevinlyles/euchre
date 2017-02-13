@@ -59,7 +59,6 @@ class Game {
 
 	private endGame() {
 		this.__gameStage = GameStage.Finished;
-		animShowText("Final score: " + this.__nsScore + " : " + this.__ewScore, MessageLevel.Game);
 	}
 
 	/*******************************
