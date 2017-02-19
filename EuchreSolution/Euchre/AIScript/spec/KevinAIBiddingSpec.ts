@@ -1,14 +1,14 @@
 function testBidding(description: string, hand: Card[], trumpCandidate: Card,
-	dealer: Player, ordersUp: boolean, discards: Card | null, callsSuit: Suit | null,
+	dealer: Player, ordersUp: boolean, discard: Card | null, callsSuit: Suit | null,
 	goesAlone: boolean): void {
 	const amDealer = dealer === Player.South;
 
 	it(description + " Test code was called properly", function () {
-		expect(discards !== null || !ordersUp || !amDealer).toBe(true);
-		if (discards && ordersUp && amDealer) {
-			let found = isInHand(hand, discards);
+		expect(discard !== null || !ordersUp || !amDealer).toBe(true);
+		if (discard && ordersUp && amDealer) {
+			let found = isInHand(hand, discard);
 			if (!found && ordersUp && amDealer) {
-				found = trumpCandidate.id === discards.id;
+				found = trumpCandidate.id === discard.id;
 			}
 			expect(found).toBe(true, "Expected discard is neither in hand nor trump candidate");
 		}
@@ -63,9 +63,9 @@ function testBidding(description: string, hand: Card[], trumpCandidate: Card,
 		});
 
 		if (ordersUp && amDealer) {
-			discards = discards as Card;
-			it("Discards " + Rank[discards.rank] + " of " + Suit[discards.suit], function () {
-				expect(isInHand(testHand, discards as Card)).toBe(false);
+			discard = discard as Card;
+			it("Discards " + Rank[discard.rank] + " of " + Suit[discard.suit], function () {
+				expect(isInHand(testHand, discard as Card)).toBe(false);
 			});
 		}
 
@@ -404,5 +404,39 @@ describe("Kevin AI Bidding", function () {
 		null,
 		Suit.Spades,
 		false,
+	);
+
+	testBidding(
+		"King queen ten nine, off nine, candidate trump does not match",
+		[
+			new Card(Suit.Spades, Rank.King),
+			new Card(Suit.Spades, Rank.Queen),
+			new Card(Suit.Spades, Rank.Ten),
+			new Card(Suit.Spades, Rank.Nine),
+			new Card(Suit.Hearts, Rank.Nine),
+		],
+		new Card(Suit.Diamonds, Rank.Ace),
+		Player.West,
+		false,
+		null,
+		Suit.Spades,
+		false,
+	);
+
+	testBidding(
+		"Perfect hand, candidate trump matches, dealer",
+		[
+			new Card(Suit.Spades, Rank.Jack),
+			new Card(Suit.Clubs, Rank.Jack),
+			new Card(Suit.Spades, Rank.Ace),
+			new Card(Suit.Spades, Rank.King),
+			new Card(Suit.Spades, Rank.Queen),
+		],
+		new Card(Suit.Spades, Rank.Ten),
+		Player.South,
+		true,
+		new Card(Suit.Spades, Rank.Ten),
+		null,
+		true,
 	);
 });
