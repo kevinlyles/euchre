@@ -42,6 +42,12 @@ class KevinAI implements EuchreAI {
 		}
 
 		for (let card of hand) {
+			if (card.rank === Rank.Jack) {
+				if (card.suit === trump || card.suit === getOppositeSuit(trump)) {
+					suitCounts[trump]++;
+					continue;
+				}
+			}
 			suitCounts[card.suit]++;
 			if (card.rank === Rank.Ace) {
 				hasAce[card.suit] = true;
@@ -108,25 +114,30 @@ class KevinAI implements EuchreAI {
 	}
 
 	public chooseGoAlone(hand: Card[], trump: Suit): boolean {
-		let hasHighestCard: boolean[] = []
-		let loserCounts: number[] = [];
-		for (let i = 0; i < 4; i++) {
-			hasHighestCard[i] = false;
-			loserCounts[i] = 0;
-		}
+		let hasHighestCard: boolean[] = [false, false, false, false]
+		let loserCounts: number[] = [0, 0, 0, 0];
+		let trumpCount = 0;
 		for (let card of hand) {
 			if (card.suit === trump) {
+				trumpCount++;
 				if (card.rank === Rank.Jack) {
 					hasHighestCard[card.suit] = true;
+				} else {
+					let losesBy = Rank.Right - card.rank;
+					if (loserCounts[card.suit] === 0 || loserCounts[card.suit] > losesBy) {
+						loserCounts[card.suit] = losesBy;
+					}
 				}
 			} else if (card.suit === getOppositeSuit(trump) && card.rank === Rank.Jack) {
-				// Nothing to do
+				trumpCount++;
+				loserCounts[trump] = 1;
 			} else if (card.rank === Rank.Ace) {
 				hasHighestCard[card.suit] = true;
 			} else {
 				let losesBy = Rank.Ace - card.rank;
-				if (loserCounts[card.suit] === 0 || loserCounts[card.suit] > losesBy)
+				if (loserCounts[card.suit] === 0 || loserCounts[card.suit] > losesBy) {
 					loserCounts[card.suit] = losesBy;
+				}
 			}
 		}
 		let loserCount = 0;
@@ -135,7 +146,8 @@ class KevinAI implements EuchreAI {
 				loserCount += loserCounts[i]
 			}
 		}
-		return loserCount <= 1;
+		let hasBothBowers = hasHighestCard[trump] && loserCounts[trump] === 1;
+		return loserCount <= 0 || (loserCount === 1 && (trumpCount >= 4 || hasBothBowers));
 	}
 
 	public pickCard(hand: Card[], maker: Player, trump: Suit, trickSoFar: PlayedCard[]): Card | null {

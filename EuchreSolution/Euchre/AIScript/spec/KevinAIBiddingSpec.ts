@@ -256,7 +256,7 @@ describe("Kevin AI Bidding", function () {
 	);
 
 	testBidding(
-		"Right nine, off ace, off king queen, dealer, candidate trump matches",
+		"Right nine, off ace, off king queen, dealer, candidate trump is ten",
 		[
 			new Card(Suit.Spades, Rank.Jack),
 			new Card(Suit.Spades, Rank.Nine),
@@ -270,6 +270,23 @@ describe("Kevin AI Bidding", function () {
 		new Card(Suit.Hearts, Rank.Queen),
 		null,
 		false,
+	);
+
+	testBidding(
+		"Right left, off ace, off king queen, dealer, candidate trump is nine",
+		[
+			new Card(Suit.Spades, Rank.Jack),
+			new Card(Suit.Clubs, Rank.Jack),
+			new Card(Suit.Diamonds, Rank.Ace),
+			new Card(Suit.Hearts, Rank.King),
+			new Card(Suit.Hearts, Rank.Queen),
+		],
+		new Card(Suit.Spades, Rank.Ten),
+		Player.South,
+		true,
+		new Card(Suit.Hearts, Rank.Queen),
+		null,
+		true,
 	);
 
 	testBidding(
