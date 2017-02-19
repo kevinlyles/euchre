@@ -1,10 +1,11 @@
 function testBidding(description: string, hand: Card[], trumpCandidate: Card, dealer: Player, ordersUp: boolean, discards: Card | null, callsSuit: Suit | null, goesAlone: boolean): void {
 	describe(description, function () {
-		// Brittle, but I don't see another way to do this without passing it in
-		let amDealer = dealer === Player.South;
+		let amDealer = false;
 
 		beforeEach(function () {
-			spyOn(game, "myHand").and.returnValue(hand);
+			spyOn(game, "myHand").and.callFake(function (): Card[] {
+				return hand.slice();
+			})
 			spyOn(game, "getTrumpCandidateCard").and.returnValue(trumpCandidate);
 			spyOn(game, "getDealer").and.returnValue(dealer);
 			if (ordersUp) {
@@ -29,14 +30,13 @@ function testBidding(description: string, hand: Card[], trumpCandidate: Card, de
 			expect(ai.chooseOrderUp()).toBe(ordersUp);
 		});
 
-		if (ordersUp && amDealer) {
-			hand.push(trumpCandidate);
-			discards = discards as Card;
-			it("Discards " + Rank[discards.rank] + " of " + Suit[discards.suit], function () {
+		it(discards === null ? "Was not the dealer" : "Discards " + Rank[discards.rank] + " of " + Suit[discards.suit], function () {
+			if (amDealer && ordersUp) {
 				expect(ai.pickDiscard()).toEqual(discards);
-			});
-			hand.slice(hand.indexOf(discards), 1);
-		}
+			} else {
+				expect(discards).toBe(null);
+			}
+		});
 
 		if (!ordersUp) {
 			it(callsSuit !== null && ("Calls " + Suit[callsSuit]) || "Passes calling trump", function () {
@@ -51,6 +51,23 @@ function testBidding(description: string, hand: Card[], trumpCandidate: Card, de
 		}
 	});
 }
+
+/* TODO: re-implement this when the game does it (ideally, use the game's logic)
+function adjustHand(hand: Card[], trumpCandidate: Card) {
+	let trumpSuit = trumpCandidate.suit;
+
+	hand.push(trumpCandidate);
+	for (let i = 0; i < hand.length; i++) {
+		let card = hand[i];
+		if (card.rank === Rank.Jack) {
+			if (card.suit === trumpSuit) {
+				hand[i] = new Card(trumpSuit, Rank.Right);
+			} else if (card.suit === getOppositeSuit(trumpSuit)) {
+				hand[i] = new Card(trumpSuit, Rank.Left);
+			}
+		}
+	}
+}*/
 
 describe("Kevin AI", function () {
 	game = new Game();
@@ -220,7 +237,7 @@ describe("Kevin AI", function () {
 		);
 
 		testBidding(
-			"Right nine, off ace, off king queen, dealer, candidate trump matches",
+			"Right nine, off ace, off king queen, dealer, candidate trump is ten",
 			[
 				new Card(Suit.Spades, Rank.Jack),
 				new Card(Suit.Spades, Rank.Nine),
@@ -234,6 +251,23 @@ describe("Kevin AI", function () {
 			new Card(Suit.Hearts, Rank.Queen),
 			null,
 			false,
+		);
+
+		testBidding(
+			"Right left, off ace, off king queen, dealer, candidate trump is nine",
+			[
+				new Card(Suit.Spades, Rank.Jack),
+				new Card(Suit.Clubs, Rank.Jack),
+				new Card(Suit.Diamonds, Rank.Ace),
+				new Card(Suit.Hearts, Rank.King),
+				new Card(Suit.Hearts, Rank.Queen),
+			],
+			new Card(Suit.Spades, Rank.Ten),
+			Player.South,
+			true,
+			new Card(Suit.Hearts, Rank.Queen),
+			null,
+			true,
 		);
 
 		testBidding(
