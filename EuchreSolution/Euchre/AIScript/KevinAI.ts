@@ -33,13 +33,9 @@ class KevinAI implements EuchreAI {
 	}
 
 	public pickDiscard(hand: Card[], trump: Suit): Card | null {
-		let suitCounts: number[] = [];
-		let hasAce: boolean[] = [];
+		let suitCounts: number[] = [0, 0, 0, 0];
+		let hasAce: boolean[] = [false, false, false, false];
 		let lowestCards: Card[] = [];
-		for (let suit of suitsArray) {
-			suitCounts[suit] = 0;
-			hasAce[suit] = false;
-		}
 
 		for (let card of hand) {
 			if (card.rank === Rank.Jack) {
@@ -71,6 +67,7 @@ class KevinAI implements EuchreAI {
 		if (lowestCard) {
 			return lowestCard;
 		}
+
 		for (let suit of suitsArray) {
 			if (suit === trump || lowestCards[suit] === undefined) {
 				continue;
@@ -84,10 +81,20 @@ class KevinAI implements EuchreAI {
 		if (lowestCard) {
 			return lowestCard;
 		}
+
 		for (let suit of suitsArray) {
 			if (suit === trump || lowestCards[suit] === undefined) {
 				continue;
 			}
+			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
+				lowestCard = lowestCards[suit];
+			}
+		}
+		if (lowestCard) {
+			return lowestCard;
+		}
+
+		for (let suit of suitsArray) {
 			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
 				lowestCard = lowestCards[suit];
 			}
