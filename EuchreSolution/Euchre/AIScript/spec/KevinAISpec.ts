@@ -1,23 +1,22 @@
-function testBidding(description: string, hand: Card[], trumpCandidate: Card, dealer: Player, ordersUp: boolean, discards: Card | null, callsSuit: Suit | null, goesAlone: boolean): void {
+function testBidding(description: string, hand: Card[], trumpCandidate: Card, dealer: Player | true, ordersUp: false, discard: null, callsSuit: null, goesAlone: false): void;
+function testBidding(description: string, hand: Card[], trumpCandidate: Card, dealer: Player | true, ordersUp: false, discard: null, callsSuit: Suit, goesAlone: boolean): void;
+function testBidding(description: string, hand: Card[], trumpCandidate: Card, dealer: Player, ordersUp: true, discard: null, callsSuit: null, goesAlone: boolean): void;
+function testBidding(description: string, hand: Card[], trumpCandidate: Card, dealer: true, ordersUp: true, discard: Card, callsSuit: null, goesAlone: boolean): void;
+function testBidding(description: string, hand: Card[], trumpCandidate: Card, dealer: Player | true, ordersUp: boolean, discard: Card | null, callsSuit: Suit | null, goesAlone: boolean): void {
 	describe(description, function () {
-		let amDealer = false;
+		let amDealer = dealer === true;
 
 		beforeEach(function () {
 			spyOn(game, "myHand").and.callFake(function (): Card[] {
 				return hand.slice();
 			})
 			spyOn(game, "getTrumpCandidateCard").and.returnValue(trumpCandidate);
-			spyOn(game, "getDealer").and.returnValue(dealer);
+			spyOn(game, "getDealer").and.returnValue(dealer === true ? game.getCurrentPlayer() : dealer);
 			if (ordersUp) {
 				spyOn(game, "getTrumpSuit").and.returnValue(trumpCandidate.suit);
 			} else if (callsSuit !== null) {
 				spyOn(game, "getTrumpSuit").and.returnValue(callsSuit);
 			}
-			amDealer = isDealer(me());
-		});
-
-		it("Test code was called properly", function () {
-			expect(discards !== null || !ordersUp || !amDealer).toBe(true);
 		});
 
 		let ai = new KevinAI();
@@ -30,13 +29,14 @@ function testBidding(description: string, hand: Card[], trumpCandidate: Card, de
 			expect(ai.chooseOrderUp()).toBe(ordersUp);
 		});
 
-		it(discards === null ? "Was not the dealer" : "Discards " + Rank[discards.rank] + " of " + Suit[discards.suit], function () {
-			if (amDealer && ordersUp) {
-				expect(ai.pickDiscard()).toEqual(discards);
-			} else {
-				expect(discards).toBe(null);
-			}
-		});
+		if (ordersUp && amDealer) {
+			//hand.push(trumpCandidate);
+			discard = discard as Card;
+			it("Discards " + Rank[discard.rank] + " of " + Suit[discard.suit], function () {
+				expect(ai.pickDiscard()).toEqual(discard);
+			});
+			//hand.slice(hand.indexOf(discard), 1);
+		}
 
 		if (!ordersUp) {
 			it(callsSuit !== null && ("Calls " + Suit[callsSuit]) || "Passes calling trump", function () {
@@ -127,7 +127,7 @@ describe("Kevin AI", function () {
 				new Card(Suit.Diamonds, Rank.Nine),
 			],
 			new Card(Suit.Spades, Rank.Nine),
-			Player.South,
+			true,
 			true,
 			new Card(Suit.Diamonds, Rank.Nine),
 			null,
@@ -144,7 +144,7 @@ describe("Kevin AI", function () {
 				new Card(Suit.Diamonds, Rank.Nine),
 			],
 			new Card(Suit.Spades, Rank.Ten),
-			Player.South,
+			true,
 			true,
 			new Card(Suit.Diamonds, Rank.Nine),
 			null,
@@ -161,7 +161,7 @@ describe("Kevin AI", function () {
 				new Card(Suit.Diamonds, Rank.Nine),
 			],
 			new Card(Suit.Spades, Rank.Nine),
-			Player.South,
+			true,
 			true,
 			new Card(Suit.Diamonds, Rank.Nine),
 			null,
@@ -246,7 +246,7 @@ describe("Kevin AI", function () {
 				new Card(Suit.Hearts, Rank.Queen),
 			],
 			new Card(Suit.Spades, Rank.Ten),
-			Player.South,
+			true,
 			true,
 			new Card(Suit.Hearts, Rank.Queen),
 			null,
@@ -263,7 +263,7 @@ describe("Kevin AI", function () {
 				new Card(Suit.Hearts, Rank.Queen),
 			],
 			new Card(Suit.Spades, Rank.Ten),
-			Player.South,
+			true,
 			true,
 			new Card(Suit.Hearts, Rank.Queen),
 			null,
@@ -387,6 +387,40 @@ describe("Kevin AI", function () {
 			null,
 			Suit.Spades,
 			false,
+		);
+
+		testBidding(
+			"King queen ten nine, off nine, candidate trump does not match",
+			[
+				new Card(Suit.Spades, Rank.King),
+				new Card(Suit.Spades, Rank.Queen),
+				new Card(Suit.Spades, Rank.Ten),
+				new Card(Suit.Spades, Rank.Nine),
+				new Card(Suit.Hearts, Rank.Nine),
+			],
+			new Card(Suit.Diamonds, Rank.Ace),
+			Player.West,
+			false,
+			null,
+			Suit.Spades,
+			false,
+		);
+
+		testBidding(
+			"Perfect hand, candidate trump matches, dealer",
+			[
+				new Card(Suit.Spades, Rank.Jack),
+				new Card(Suit.Clubs, Rank.Jack),
+				new Card(Suit.Spades, Rank.Ace),
+				new Card(Suit.Spades, Rank.King),
+				new Card(Suit.Spades, Rank.Queen),
+			],
+			new Card(Suit.Spades, Rank.Ten),
+			true,
+			true,
+			new Card(Suit.Spades, Rank.Ten),
+			null,
+			true,
 		);
 	});
 });

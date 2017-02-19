@@ -38,12 +38,14 @@ class KevinAI implements EuchreAI {
 	public pickDiscard(): Card | null {
 		let hand = game.myHand();
 		let trumpSuit = game.getTrumpSuit() as Suit;
-		let suitCounts: number[] = [];
-		let hasAce: boolean[] = [];
+		let amDealer = isDealer(me());
+		let trumpCandidate = game.getTrumpCandidateCard() as Card;
+		let suitCounts: number[] = [0, 0, 0, 0];
+		let hasAce: boolean[] = [false, false, false, false];
 		let lowestCards: Card[] = [];
-		for (let suit of suitsArray) {
-			suitCounts[suit] = 0;
-			hasAce[suit] = false;
+
+		if (amDealer) {
+			hand.push(trumpCandidate);
 		}
 
 		for (let card of hand) {
@@ -76,6 +78,7 @@ class KevinAI implements EuchreAI {
 		if (lowestCard) {
 			return lowestCard;
 		}
+
 		for (let suit of suitsArray) {
 			if (suit === trumpSuit || lowestCards[suit] === undefined) {
 				continue;
@@ -89,10 +92,20 @@ class KevinAI implements EuchreAI {
 		if (lowestCard) {
 			return lowestCard;
 		}
+
 		for (let suit of suitsArray) {
 			if (suit === trumpSuit || lowestCards[suit] === undefined) {
 				continue;
 			}
+			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
+				lowestCard = lowestCards[suit];
+			}
+		}
+		if (lowestCard) {
+			return lowestCard;
+		}
+
+		for (let suit of suitsArray) {
 			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
 				lowestCard = lowestCards[suit];
 			}
