@@ -42,7 +42,7 @@ class KevinAI implements EuchreAI {
 		let trumpCandidate = game.getTrumpCandidateCard() as Card;
 		let suitCounts: number[] = [0, 0, 0, 0];
 		let hasAce: boolean[] = [false, false, false, false];
-		let lowestCards: Card[] = [];
+		let lowestCards: (Card | null)[] = [null, null, null, null];
 
 		if (amDealer) {
 			hand.push(trumpCandidate);
@@ -59,19 +59,21 @@ class KevinAI implements EuchreAI {
 			if (card.rank === Rank.Ace) {
 				hasAce[card.suit] = true;
 			}
-			if (!lowestCards[card.suit] || lowestCards[card.suit].rank > card.rank) {
+			let lowestCardInSuit = lowestCards[card.suit]
+			if (!lowestCardInSuit || lowestCardInSuit.rank > card.rank) {
 				lowestCards[card.suit] = card;
 			}
 		}
 
 		let lowestCard: Card | null = null;
 		for (let suit of suitsArray) {
-			if (suit === trumpSuit || lowestCards[suit] === undefined) {
+			let lowestCardInSuit = lowestCards[suit]
+			if (suit === trumpSuit || !lowestCardInSuit) {
 				continue;
 			}
 			if (suitCounts[suit] == 1 && !hasAce[suit]) {
-				if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
-					lowestCard = lowestCards[suit];
+				if (!lowestCard || lowestCard.rank > lowestCardInSuit.rank) {
+					lowestCard = lowestCardInSuit;
 				}
 			}
 		}
@@ -80,12 +82,13 @@ class KevinAI implements EuchreAI {
 		}
 
 		for (let suit of suitsArray) {
-			if (suit === trumpSuit || lowestCards[suit] === undefined) {
+			let lowestCardInSuit = lowestCards[suit]
+			if (suit === trumpSuit || !lowestCardInSuit) {
 				continue;
 			}
 			if (!hasAce[suit]) {
-				if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
-					lowestCard = lowestCards[suit];
+				if (!lowestCard || lowestCard.rank > lowestCardInSuit.rank) {
+					lowestCard = lowestCardInSuit;
 				}
 			}
 		}
@@ -94,11 +97,12 @@ class KevinAI implements EuchreAI {
 		}
 
 		for (let suit of suitsArray) {
-			if (suit === trumpSuit || lowestCards[suit] === undefined) {
+			let lowestCardInSuit = lowestCards[suit]
+			if (suit === trumpSuit || !lowestCardInSuit) {
 				continue;
 			}
-			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
-				lowestCard = lowestCards[suit];
+			if (!lowestCard || lowestCard.rank > lowestCardInSuit.rank) {
+				lowestCard = lowestCardInSuit;
 			}
 		}
 		if (lowestCard) {
@@ -106,8 +110,12 @@ class KevinAI implements EuchreAI {
 		}
 
 		for (let suit of suitsArray) {
-			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
-				lowestCard = lowestCards[suit];
+			let lowestCardInSuit = lowestCards[suit]
+			if (!lowestCardInSuit) {
+				continue;
+			}
+			if (!lowestCard || lowestCard.rank > lowestCardInSuit.rank) {
+				lowestCard = lowestCardInSuit;
 			}
 		}
 		if (lowestCard) {
