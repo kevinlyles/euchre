@@ -33,15 +33,17 @@ class KevinAIOld implements EuchreAI {
 	}
 
 	public pickDiscard(hand: Card[], trump: Suit): Card | null {
-		let suitCounts: number[] = [];
-		let hasAce: boolean[] = [];
+		let suitCounts: number[] = [0, 0, 0, 0];
+		let hasAce: boolean[] = [false, false, false, false];
 		let lowestCards: Card[] = [];
-		for (let suit of suitsArray) {
-			suitCounts[suit] = 0;
-			hasAce[suit] = false;
-		}
 
 		for (let card of hand) {
+			if (card.rank === Rank.Jack) {
+				if (card.suit === trump || card.suit === getOppositeSuit(trump)) {
+					suitCounts[trump]++;
+					continue;
+				}
+			}
 			suitCounts[card.suit]++;
 			if (card.rank === Rank.Ace) {
 				hasAce[card.suit] = true;
@@ -65,6 +67,7 @@ class KevinAIOld implements EuchreAI {
 		if (lowestCard) {
 			return lowestCard;
 		}
+
 		for (let suit of suitsArray) {
 			if (suit === trump || lowestCards[suit] === undefined) {
 				continue;
@@ -78,10 +81,20 @@ class KevinAIOld implements EuchreAI {
 		if (lowestCard) {
 			return lowestCard;
 		}
+
 		for (let suit of suitsArray) {
 			if (suit === trump || lowestCards[suit] === undefined) {
 				continue;
 			}
+			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
+				lowestCard = lowestCards[suit];
+			}
+		}
+		if (lowestCard) {
+			return lowestCard;
+		}
+
+		for (let suit of suitsArray) {
 			if (!lowestCard || lowestCard.rank > lowestCards[suit].rank) {
 				lowestCard = lowestCards[suit];
 			}
@@ -95,13 +108,10 @@ class KevinAIOld implements EuchreAI {
 	}
 
 	public pickTrump(hand: Card[], trumpCandidate: Card): Suit | null {
-		let suitResults = this.evaluateSuits(hand);
+		let suitResults = this.evaluateSuits(hand, false, trumpCandidate);
 
 		for (let minValue = 3; minValue > 0; minValue--) {
 			for (let suit of suitsArray) {
-				if (suit === trumpCandidate.suit) {
-					continue;
-				}
 				if (suitResults[suit] >= minValue) {
 					return suit;
 				}
@@ -111,25 +121,30 @@ class KevinAIOld implements EuchreAI {
 	}
 
 	public chooseGoAlone(hand: Card[], trump: Suit): boolean {
-		let hasHighestCard: boolean[] = []
-		let loserCounts: number[] = [];
-		for (let i = 0; i < 4; i++) {
-			hasHighestCard[i] = false;
-			loserCounts[i] = 0;
-		}
+		let hasHighestCard: boolean[] = [false, false, false, false]
+		let loserCounts: number[] = [0, 0, 0, 0];
+		let trumpCount = 0;
 		for (let card of hand) {
 			if (card.suit === trump) {
+				trumpCount++;
 				if (card.rank === Rank.Jack) {
 					hasHighestCard[card.suit] = true;
+				} else {
+					let losesBy = Rank.Right - card.rank;
+					if (loserCounts[card.suit] === 0 || loserCounts[card.suit] > losesBy) {
+						loserCounts[card.suit] = losesBy;
+					}
 				}
 			} else if (card.suit === getOppositeSuit(trump) && card.rank === Rank.Jack) {
-				// Nothing to do
+				trumpCount++;
+				loserCounts[trump] = 1;
 			} else if (card.rank === Rank.Ace) {
 				hasHighestCard[card.suit] = true;
 			} else {
 				let losesBy = Rank.Ace - card.rank;
-				if (loserCounts[card.suit] === 0 || loserCounts[card.suit] > losesBy)
+				if (loserCounts[card.suit] === 0 || loserCounts[card.suit] > losesBy) {
 					loserCounts[card.suit] = losesBy;
+				}
 			}
 		}
 		let loserCount = 0;
@@ -138,7 +153,8 @@ class KevinAIOld implements EuchreAI {
 				loserCount += loserCounts[i]
 			}
 		}
-		return loserCount <= 1;
+		let hasBothBowers = hasHighestCard[trump] && loserCounts[trump] === 1;
+		return loserCount <= 0 || (loserCount === 1 && (trumpCount >= 4 || hasBothBowers));
 	}
 
 	public pickCard(hand: Card[], maker: Player, trump: Suit, trickSoFar: PlayedCard[]): Card | null {
@@ -223,9 +239,41 @@ class KevinAIOld implements EuchreAI {
 		}
 	}
 
-	private evaluateSuits(hand: Card[], givingAwayTrump?: boolean): number[] {
-		let suitScore: number[] = [];
+	// Assumes that the trump suit will never match the buried card's suit
+	private adjustHand(hand: Card[], trump: Suit, buriedCard?: Card): Card[] {
+		if (!buriedCard) {
+			return hand;
+		}
+
+		let buriedCardIsLeft = buriedCard.suit === getOppositeSuit(trump) && buriedCard.rank === Rank.Jack;
+		let adjustedHand: Card[] = [];
+		for (let card of hand) {
+			if (card.suit === buriedCard.suit) {
+				if (card.rank > buriedCard.rank || (card.suit === getOppositeSuit(trump) && card.rank === Rank.Jack)) {
+					adjustedHand.push(card);
+				} else {
+					adjustedHand.push(new Card(card.suit, card.rank + 1));
+				}
+			} else if (card.suit === trump && buriedCardIsLeft) {
+				if (card.rank > buriedCard.rank || card.rank === Rank.Jack) {
+					adjustedHand.push(card);
+				} else {
+					adjustedHand.push(new Card(card.suit, card.rank + 1));
+				}
+			} else {
+				adjustedHand.push(card);
+			}
+		}
+		return adjustedHand;
+	}
+
+	private evaluateSuits(hand: Card[], givingAwayTrump: boolean, knownBuriedCard?: Card): number[] {
+		let suitScore: number[] = [0, 0, 0, 0];
 		for (let suit of suitsArray) {
+			if (knownBuriedCard && suit === knownBuriedCard.suit) {
+				continue;
+			}
+			let adjustedHand = this.adjustHand(hand, suit, knownBuriedCard);
 			let counts = {
 				offAceCount: 0,
 				suitCount: 0,
@@ -240,7 +288,7 @@ class KevinAIOld implements EuchreAI {
 				hasTrump[rank] = false;
 			}
 
-			for (let card of hand) {
+			for (let card of adjustedHand) {
 				this.evaluateCard(card, suit, hasTrump, hasSuit, counts);
 			}
 
@@ -255,14 +303,8 @@ class KevinAIOld implements EuchreAI {
 						suitScore[suit] = 1;
 					} else if (counts.trumpCount >= 2 && counts.offAceCount >= 2) {
 						suitScore[suit] = 1;
-					} else {
-						suitScore[suit] = 0;
 					}
-				} else {
-					suitScore[suit] = 0;
 				}
-			} else {
-				suitScore[suit] = 0;
 			}
 		}
 		return suitScore;
