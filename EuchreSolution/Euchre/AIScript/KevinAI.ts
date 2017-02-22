@@ -36,17 +36,27 @@ class KevinAI implements EuchreAI {
 	}
 
 	public pickDiscard(): Card | null {
+		//TODO: remove all the etar stuff once the game (and the tests) do it for us
 		let hand = game.myHand();
+		let trumpCandidateCard = game.getTrumpCandidateCard() as Card;
+		let found = false;
+		for (let i = 0; i < hand.length; i++) {
+			if (hand[i].id === trumpCandidateCard.id) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			hand.push(trumpCandidateCard);
+		}
+		return this.pickDiscardWithHand(hand);
+	}
+
+	private pickDiscardWithHand(hand: Card[]): Card | null {
 		let trumpSuit = game.getTrumpSuit() as Suit;
-		let amDealer = isDealer(me());
-		let trumpCandidate = game.getTrumpCandidateCard() as Card;
 		let suitCounts: number[] = [0, 0, 0, 0];
 		let hasAce: boolean[] = [false, false, false, false];
 		let lowestCards: (Card | null)[] = [null, null, null, null];
-
-		if (amDealer) {
-			hand.push(trumpCandidate);
-		}
 
 		for (let card of hand) {
 			if (card.rank === Rank.Jack) {
@@ -144,10 +154,36 @@ class KevinAI implements EuchreAI {
 
 	public chooseGoAlone(): boolean {
 		let hand = game.myHand();
+		let trumpCandidateCard = game.getTrumpCandidateCard() as Card;
 		let trumpSuit = game.getTrumpSuit() as Suit;
+		let amDealer = isDealer(me());
 		let hasHighestCard: boolean[] = [false, false, false, false]
 		let loserCounts: number[] = [0, 0, 0, 0];
 		let trumpCount = 0;
+
+		//TODO: remove this once the game (and the tests) do it for us
+		if (amDealer && trumpCandidateCard.suit === trumpSuit) {
+			let found = false;
+			for (let i = 0; i < hand.length; i++) {
+				if (hand[i].id === trumpCandidateCard.id) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				hand.push(trumpCandidateCard);
+			}
+			if (hand.length > 5) {
+				let discard = this.pickDiscardWithHand(hand) as Card;
+				for (let i = 0; i < hand.length; i++) {
+					if (hand[i].id === discard.id) {
+						hand.splice(i, 1);
+						break;
+					}
+				}
+			}
+		}
+
 		for (let card of hand) {
 			if (card.suit === trumpSuit) {
 				trumpCount++;
