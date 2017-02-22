@@ -132,6 +132,7 @@ class KevinAI implements EuchreAI {
 		const hasHighestCard: boolean[] = [false, false, false, false];
 		const loserCounts: number[] = [0, 0, 0, 0];
 		let trumpCount = 0;
+
 		for (const card of hand) {
 			if (card.suit === trump) {
 				trumpCount++;
