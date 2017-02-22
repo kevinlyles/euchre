@@ -458,7 +458,7 @@ describe("Kevin AI", function () {
 		);
 
 		testBidding(
-			"Right left ace, off queen, off ten, candidate trump matches, dealer",
+			"Right left ace, off queen, off ten, candidate trump matches, dealer (other order of offsuits)",
 			[
 				new Card(Suit.Spades, Rank.Jack),
 				new Card(Suit.Clubs, Rank.Jack),
