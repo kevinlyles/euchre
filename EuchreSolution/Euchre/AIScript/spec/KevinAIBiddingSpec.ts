@@ -441,4 +441,55 @@ describe("Kevin AI Bidding", function () {
 		null,
 		true,
 	);
+
+	testBidding(
+		"Perfect hand after picking it up, candidate trump matches, dealer",
+		[
+			new Card(Suit.Spades, Rank.Jack),
+			new Card(Suit.Clubs, Rank.Jack),
+			new Card(Suit.Spades, Rank.Ace),
+			new Card(Suit.Spades, Rank.King),
+			new Card(Suit.Diamonds, Rank.Ten),
+		],
+		new Card(Suit.Spades, Rank.Queen),
+		Player.South,
+		true,
+		new Card(Suit.Diamonds, Rank.Ten),
+		null,
+		true,
+	);
+
+	testBidding(
+		"Right left ace, off queen, off ten, candidate trump matches, dealer",
+		[
+			new Card(Suit.Spades, Rank.Jack),
+			new Card(Suit.Clubs, Rank.Jack),
+			new Card(Suit.Spades, Rank.Ace),
+			new Card(Suit.Diamonds, Rank.Queen),
+			new Card(Suit.Hearts, Rank.Ten),
+		],
+		new Card(Suit.Spades, Rank.King),
+		Player.South,
+		true,
+		new Card(Suit.Hearts, Rank.Ten),
+		null,
+		false,
+	);
+
+	testBidding(
+		"Right left ace, off queen, off ten, candidate trump matches, dealer",
+		[
+			new Card(Suit.Spades, Rank.Jack),
+			new Card(Suit.Clubs, Rank.Jack),
+			new Card(Suit.Spades, Rank.Ace),
+			new Card(Suit.Hearts, Rank.Queen),
+			new Card(Suit.Diamonds, Rank.Ten),
+		],
+		new Card(Suit.Spades, Rank.King),
+		Player.South,
+		true,
+		new Card(Suit.Diamonds, Rank.Ten),
+		null,
+		false,
+	);
 });
