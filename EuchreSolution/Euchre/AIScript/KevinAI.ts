@@ -36,7 +36,7 @@ class KevinAI implements EuchreAI {
 	}
 
 	public pickDiscard(): Card | null {
-		//TODO: remove all the etar stuff once the game (and the tests) do it for us
+		//TODO: remove all the extra stuff once the game (and the tests) do it for us
 		let hand = game.myHand();
 		let trumpCandidateCard = game.getTrumpCandidateCard() as Card;
 		let found = false;
