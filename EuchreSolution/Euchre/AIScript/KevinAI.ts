@@ -141,6 +141,7 @@ class KevinAI implements EuchreAI {
 		return null;
 	}
 
+	//TODO: split this up
 	public chooseGoAlone(): boolean {
 		let hand = game.myHand();
 		let trumpCandidateCard = game.getTrumpCandidateCard() as Card;
@@ -335,10 +336,7 @@ class KevinAI implements EuchreAI {
 				suitCount: 0,
 				trumpCount: 0,
 			}
-			let hasSuit: boolean[] = [];
-			for (let suit of suitsArray) {
-				hasSuit[suit] = false;
-			}
+			let hasSuit: boolean[] = [false, false, false, false];
 			let hasTrump: boolean[] = [];
 			for (let rank of this.ranks) {
 				hasTrump[rank] = false;
