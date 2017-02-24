@@ -274,10 +274,7 @@ class KevinAI implements EuchreAI {
 				suitCount: 0,
 				trumpCount: 0,
 			};
-			const hasSuit: boolean[] = [];
-			for (const clearSuit of suitsArray) {
-				hasSuit[clearSuit] = false;
-			}
+			const hasSuit: boolean[] = [false, false, false, false];
 			const hasTrump: boolean[] = [];
 			for (const rank of this.ranks) {
 				hasTrump[rank] = false;
