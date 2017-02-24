@@ -33,6 +33,29 @@ class KevinAI implements EuchreAI {
 	}
 
 	public pickDiscard(hand: Card[], trump: Suit): Card | null {
+
+		const { lowestCards, suitCounts, hasAce } = this.analyzeSuits(hand, trump);
+
+		const filters: ((suit: Suit) => boolean)[] = [
+			(suit: Suit) => suitCounts[suit] === 1 && !hasAce[suit],
+			(suit: Suit) => !hasAce[suit], _ => true,
+		];
+
+		for (const filter of filters) {
+			const lowestCard = this.filterCards(lowestCards, trump, filter);
+			if (lowestCard) {
+				return lowestCard;
+			}
+		}
+
+		return getWorstCardInHand(hand, undefined, trump);
+	}
+
+	private analyzeSuits(hand: Card[], trump: Suit): {
+		suitCounts: number[],
+		hasAce: boolean[],
+		lowestCards: (Card | null)[],
+	} {
 		const suitCounts: number[] = [0, 0, 0, 0];
 		const hasAce: boolean[] = [false, false, false, false];
 		const lowestCards: (Card | null)[] = [null, null, null, null];
@@ -54,65 +77,27 @@ class KevinAI implements EuchreAI {
 			}
 		}
 
+		return {
+			suitCounts,
+			hasAce,
+			lowestCards,
+		};
+	}
+
+	private filterCards(lowestCards: (Card | null)[], skipSuit: Suit, filter: (suit: Suit) => boolean): Card | null {
 		let lowestCard: Card | null = null;
 		for (const suit of suitsArray) {
 			const lowestCardInSuit = lowestCards[suit];
-			if (suit === trump || !lowestCardInSuit) {
+			if (suit === skipSuit || !lowestCardInSuit) {
 				continue;
 			}
-			if (suitCounts[suit] === 1 && !hasAce[suit]) {
+			if (filter(suit)) {
 				if (!lowestCard || lowestCard.rank > lowestCardInSuit.rank) {
 					lowestCard = lowestCardInSuit;
 				}
 			}
 		}
-		if (lowestCard) {
-			return lowestCard;
-		}
-
-		for (const suit of suitsArray) {
-			const lowestCardInSuit = lowestCards[suit];
-			if (suit === trump || !lowestCardInSuit) {
-				continue;
-			}
-			if (!hasAce[suit]) {
-				if (!lowestCard || lowestCard.rank > lowestCardInSuit.rank) {
-					lowestCard = lowestCardInSuit;
-				}
-			}
-		}
-		if (lowestCard) {
-			return lowestCard;
-		}
-
-		for (const suit of suitsArray) {
-			const lowestCardInSuit = lowestCards[suit];
-			if (suit === trump || !lowestCardInSuit) {
-				continue;
-			}
-			if (!lowestCard || lowestCard.rank > lowestCardInSuit.rank) {
-				lowestCard = lowestCardInSuit;
-			}
-		}
-		if (lowestCard) {
-			return lowestCard;
-		}
-
-		for (const suit of suitsArray) {
-			const lowestCardInSuit = lowestCards[suit];
-			if (!lowestCardInSuit) {
-				continue;
-			}
-			if (!lowestCard || lowestCard.rank > lowestCardInSuit.rank) {
-				lowestCard = lowestCardInSuit;
-			}
-		}
-		if (lowestCard) {
-			return lowestCard;
-		}
-
-		//TODO: handle this case better
-		return getWorstCardInHand(hand, undefined, trump);
+		return lowestCard;
 	}
 
 	public pickTrump(hand: Card[], trumpCandidate: Card): Suit | null {
