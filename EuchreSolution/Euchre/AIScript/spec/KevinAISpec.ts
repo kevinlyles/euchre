@@ -473,5 +473,56 @@ describe("Kevin AI", function () {
 			null,
 			false,
 		);
+
+		testBidding(
+			"Right left ace, off king queen, candidate trump matches, dealer",
+			[
+				new Card(Suit.Spades, Rank.Jack),
+				new Card(Suit.Clubs, Rank.Jack),
+				new Card(Suit.Spades, Rank.Ace),
+				new Card(Suit.Hearts, Rank.King),
+				new Card(Suit.Hearts, Rank.Queen),
+			],
+			new Card(Suit.Spades, Rank.King),
+			true,
+			true,
+			new Card(Suit.Hearts, Rank.Queen),
+			null,
+			true,
+		);
+
+		testBidding(
+			"Right left ace, off king queen, candidate trump matches, dealer (other order of offsuits)",
+			[
+				new Card(Suit.Spades, Rank.Jack),
+				new Card(Suit.Clubs, Rank.Jack),
+				new Card(Suit.Spades, Rank.Ace),
+				new Card(Suit.Hearts, Rank.Queen),
+				new Card(Suit.Hearts, Rank.King),
+			],
+			new Card(Suit.Spades, Rank.King),
+			true,
+			true,
+			new Card(Suit.Hearts, Rank.Queen),
+			null,
+			true,
+		);
+
+		testBidding(
+			"Right left ace king, off ace, candidate trump matches, dealer",
+			[
+				new Card(Suit.Spades, Rank.Jack),
+				new Card(Suit.Clubs, Rank.Jack),
+				new Card(Suit.Spades, Rank.Ace),
+				new Card(Suit.Spades, Rank.King),
+				new Card(Suit.Hearts, Rank.Ace),
+			],
+			new Card(Suit.Spades, Rank.Queen),
+			true,
+			true,
+			new Card(Suit.Hearts, Rank.Ace),
+			null,
+			true,
+		);
 	});
 });
