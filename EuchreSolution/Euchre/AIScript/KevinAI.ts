@@ -35,10 +35,8 @@ class KevinAI implements EuchreAI {
 		return suitScores[trumpCandidate.suit] > 0;
 	}
 
-	public pickDiscard(): Card | null {
-		//TODO: remove all the extra stuff once the game (and the tests) do it for us
-		let hand = game.myHand();
-		let trumpCandidateCard = game.getTrumpCandidateCard() as Card;
+	//TODO: remove this once the game (and the tests) do it for us
+	private pickItUp(hand: Card[], trumpCandidateCard: Card): Card[] {
 		let found = false;
 		for (let i = 0; i < hand.length; i++) {
 			if (hand[i].id === trumpCandidateCard.id) {
@@ -49,6 +47,28 @@ class KevinAI implements EuchreAI {
 		if (!found) {
 			hand.push(trumpCandidateCard);
 		}
+		return hand;
+	}
+
+	//TODO: remove this once the game (and the tests) do it for us
+	private pickItUpAndDiscard(hand: Card[], trumpCandidateCard: Card): Card[] {
+		hand = this.pickItUp(hand, trumpCandidateCard);
+		if (hand.length > 5) {
+			let discard = this.pickDiscardWithHand(hand) as Card;
+			for (let i = 0; i < hand.length; i++) {
+				if (hand[i].id === discard.id) {
+					hand.splice(i, 1);
+					break;
+				}
+			}
+		}
+		return hand;
+	}
+
+	public pickDiscard(): Card | null {
+		let hand = game.myHand();
+		let trumpCandidateCard = game.getTrumpCandidateCard() as Card;
+		hand = this.pickItUp(hand, trumpCandidateCard);
 		return this.pickDiscardWithHand(hand);
 	}
 
@@ -151,27 +171,10 @@ class KevinAI implements EuchreAI {
 		let loserCounts: number[] = [0, 0, 0, 0];
 		let trumpCount = 0;
 
-		//TODO: remove this once the game (and the tests) do it for us
 		if (amDealer && trumpCandidateCard.suit === trumpSuit) {
-			let found = false;
-			for (let i = 0; i < hand.length; i++) {
-				if (hand[i].id === trumpCandidateCard.id) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				hand.push(trumpCandidateCard);
-			}
-			if (hand.length > 5) {
-				let discard = this.pickDiscardWithHand(hand) as Card;
-				for (let i = 0; i < hand.length; i++) {
-					if (hand[i].id === discard.id) {
-						hand.splice(i, 1);
-						break;
-					}
-				}
-			}
+			hand = this.pickItUpAndDiscard(hand, trumpCandidateCard);
+		} else if (trumpCandidateCard.suit !== trumpSuit) {
+			hand = this.adjustHand(hand, trumpSuit, trumpCandidateCard)
 		}
 
 		for (let card of hand) {
@@ -207,6 +210,7 @@ class KevinAI implements EuchreAI {
 		return loserCount <= 0 || (loserCount === 1 && (trumpCount >= 4 || hasBothBowers));
 	}
 
+	//TODO: split this up
 	public pickCard(): Card | null {
 		let hand = game.myHand();
 		let maker = game.getMaker();
@@ -312,7 +316,7 @@ class KevinAI implements EuchreAI {
 					adjustedHand.push(new Card(card.suit, card.rank + 1));
 				}
 			} else if (card.suit === trumpSuit && buriedCardIsLeft) {
-				if (card.rank > buriedCard.rank || card.rank === Rank.Jack) {
+				if (card.rank === Rank.Jack) {
 					adjustedHand.push(card);
 				} else {
 					adjustedHand.push(new Card(card.suit, card.rank + 1));
