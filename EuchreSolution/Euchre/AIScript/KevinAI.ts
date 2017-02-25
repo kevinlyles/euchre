@@ -32,8 +32,20 @@ class KevinAI implements EuchreAI {
 		return suitScores[trumpCandidate.suit] > 0;
 	}
 
-	public pickDiscard(hand: Card[], trump: Suit): Card | null {
+	private doDiscard(hand: Card[], trump: Suit): Card[] {
+		if (hand.length > 5) {
+			const discard = this.pickDiscard(hand, trump) as Card;
+			for (let i = 0; i < hand.length; i++) {
+				if (hand[i].id === discard.id) {
+					hand.splice(i, 1);
+					break;
+				}
+			}
+		}
+		return hand;
+	}
 
+	public pickDiscard(hand: Card[], trump: Suit): Card | null {
 		const { lowestCards, suitCounts, hasAce } = this.analyzeSuits(hand, trump);
 
 		const filters: ((suit: Suit) => boolean)[] = [
@@ -118,6 +130,7 @@ class KevinAI implements EuchreAI {
 		const loserCounts: number[] = [0, 0, 0, 0];
 		let trumpCount = 0;
 
+		hand = this.doDiscard(hand, trump);
 		for (const card of hand) {
 			if (card.suit === trump) {
 				trumpCount++;
@@ -250,7 +263,7 @@ class KevinAI implements EuchreAI {
 					adjustedHand.push(new Card(card.suit, card.rank + 1));
 				}
 			} else if (card.suit === trump && buriedCardIsLeft) {
-				if (card.rank > buriedCard.rank || card.rank === Rank.Jack) {
+				if (card.rank === Rank.Jack) {
 					adjustedHand.push(card);
 				} else {
 					adjustedHand.push(new Card(card.suit, card.rank + 1));
