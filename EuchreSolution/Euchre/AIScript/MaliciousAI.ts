@@ -11,10 +11,10 @@ class MaliciousAI implements PlayingAI {
 		if (!card) {
 			return null;
 		}
-		for (let i = 0; i < hand.length; i++) {
-			if (card.id === hand[i].id) {
+		for (let handCard of hand) {
+			if (card.id === handCard.id) {
 				return new MaliciousCard(card.suit, trump, 1, card.rank, Rank.Right, 1,
-					card.id, new Card(trump, Rank.Jack).id, i + 1);
+					card.id, new Card(trump, Rank.Jack).id, /*i +*/ 1);
 			}
 		}
 		return null;
