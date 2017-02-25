@@ -524,5 +524,22 @@ describe("Kevin AI", function () {
 			null,
 			true,
 		);
+
+		testBidding(
+			"Right ace king, off king queen, candidate trump is left, dealer",
+			[
+				new Card(Suit.Spades, Rank.Jack),
+				new Card(Suit.Spades, Rank.Ace),
+				new Card(Suit.Spades, Rank.King),
+				new Card(Suit.Hearts, Rank.King),
+				new Card(Suit.Hearts, Rank.Queen),
+			],
+			new Card(Suit.Clubs, Rank.Jack),
+			Player.East,
+			false,
+			null,
+			Suit.Spades,
+			true,
+		);
 	});
 });
