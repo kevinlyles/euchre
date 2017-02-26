@@ -5,6 +5,7 @@
 	private __alone: boolean = false; //set in constructor
 	private __hands: Card[][];
 	private __aiPlayers: (EuchreAI | null)[];
+	private __currentPlayer: Player;
 
 	/* Properties */
 	public playersPlayed(): number {
@@ -26,12 +27,17 @@
 		return playedCards;
 	}
 
+	public currentPlayer(): Player {
+		return this.__currentPlayer;
+	}
+
 	/* constructor */
-	constructor(trumpSuit: Suit, alone: boolean, hands: Card[][], aiPlayers: (EuchreAI | null)[]) {
+	constructor(trumpSuit: Suit, alone: boolean, hands: Card[][], aiPlayers: (EuchreAI | null)[], firstPlayer: Player) {
 		this.__trumpSuit = trumpSuit;
 		this.__alone = alone;
 		this.__hands = hands;
 		this.__aiPlayers = aiPlayers;
+		this.__currentPlayer = firstPlayer;
 	}
 
 	/* Private functions */
@@ -43,8 +49,8 @@
 	}
 
 	/* Public functions */
-	public playTrickStep(player: Player, card: Card | null): Card {
-		let hand: Card[] = this.__hands[player];
+	public playTrickStep(card: Card | null): Card {
+		let hand: Card[] = this.__hands[this.__currentPlayer];
 
 		if (!card || !isInHand(hand, card) || !isValidPlay(hand, card, this.__suitLead)) {
 			card = getFirstLegalCard(hand, this.__suitLead) as Card;
@@ -53,7 +59,9 @@
 		if (this.__playedCards.length === 0) {
 			this.__suitLead = card.suit;
 		}
-		this.playCard(player, card);
+		this.playCard(this.__currentPlayer, card);
+
+		this.__currentPlayer = nextPlayer(this.__currentPlayer);
 
 		return card;
 	}
