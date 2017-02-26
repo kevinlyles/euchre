@@ -57,9 +57,9 @@ describe("Trick", function () {
 		it("Correctly counts the number of players", function () {
 			trick.playTrickStep(new Card(Suit.Spades, Rank.Ace));
 			expect(trick.playersPlayed()).toBe(1);
-			trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace));
-			expect(trick.playersPlayed()).toBe(2);
 			trick.playTrickStep(new Card(Suit.Diamonds, Rank.Ace));
+			expect(trick.playersPlayed()).toBe(2);
+			trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace));
 			expect(trick.playersPlayed()).toBe(3);
 			trick.playTrickStep(new Card(Suit.Clubs, Rank.Ace));
 			expect(trick.playersPlayed()).toBe(4);
@@ -224,17 +224,37 @@ describe("Trick", function () {
 		it("Handles a legal card that's in the player's hand", function () {
 			expect(trick.playTrickStep(new Card(Suit.Diamonds, Rank.Ace))).toEqual(new Card(Suit.Diamonds, Rank.Ace));
 			expect(trick.playTrickStep(new Card(Suit.Diamonds, Rank.Jack))).toEqual(new Card(Suit.Diamonds, Rank.Jack));
+			expect(trick.playTrickStep(new Card(Suit.Clubs, Rank.Ace))).toEqual(new Card(Suit.Clubs, Rank.Ace));
 		});
 
 		it("Enforces the right play order", function () {
+			expect(trick.currentPlayer()).toBe(Player.West);
 			expect(trick.playTrickStep(new Card(Suit.Diamonds, Rank.Ace))).toEqual(new Card(Suit.Diamonds, Rank.Ace));
 			expect(trick.currentPlayer()).toBe(Player.North);
+			let playedCards = trick.cardsPlayed();
+			expect(playedCards.length).toBe(1);
+			expect(playedCards[0].player).toBe(Player.West);
 			trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace));
 			expect(trick.currentPlayer()).toBe(Player.East);
-			let playedCards = trick.cardsPlayed();
+			playedCards = trick.cardsPlayed();
 			expect(playedCards.length).toBe(2);
 			expect(playedCards[0].player).toBe(Player.West);
 			expect(playedCards[1].player).toBe(Player.North);
+		});
+
+		it("Stops when the trick is done", function () {
+			expect(trick.currentPlayer()).toBe(Player.West);
+			expect(trick.playTrickStep(new Card(Suit.Diamonds, Rank.Ace))).toEqual(new Card(Suit.Diamonds, Rank.Ace));
+			expect(trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace))).toEqual(new Card(Suit.Diamonds, Rank.Jack));
+			expect(trick.playTrickStep(new Card(Suit.Clubs, Rank.Ace))).toEqual(new Card(Suit.Clubs, Rank.Ace));
+			expect(trick.playTrickStep(new Card(Suit.Spades, Rank.Ace))).toEqual(new Card(Suit.Spades, Rank.Ace));
+			expect(trick.playTrickStep(new Card(Suit.Diamonds, Rank.King))).toBeNull();
+			let playedCards = trick.cardsPlayed();
+			expect(playedCards.length).toBe(4);
+			expect(playedCards[0].player).toBe(Player.West);
+			expect(playedCards[1].player).toBe(Player.North);
+			expect(playedCards[2].player).toBe(Player.East);
+			expect(playedCards[3].player).toBe(Player.South);
 		});
 	});
 
