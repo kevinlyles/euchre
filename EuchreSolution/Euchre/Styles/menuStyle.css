@@ -13,9 +13,9 @@
 /* Start menu stuff */
 
 .startActive {
-	height: 180px;
+	height: 270px;
 	width: 250px;
-	top: 200px;
+	top: calc((100% - 270px) / 2);
 }
 
 #startMenuItems {
@@ -24,21 +24,36 @@
 }
 
 #newGame {
-	width: 135px;
+	width: 150px;
 	position: absolute;
 	margin: 0 auto;
 	top: 30px;
-	left: calc((100% - 135px)/2);
+	left: calc((100% - 150px)/2);
 }
 
 #newGameButt {
+	width: 150px;
+	padding: 15px 15px;
+	height: 60px;
+}
+
+#simulateHand {
+	width: 150px;
+	position: absolute;
+	margin: 0 auto;
+	top: 110px;
+	left: calc((100% - 150px)/2);
+}
+
+#simulateHandButt {
+	width: 150px;
 	padding: 15px 15px;
 	height: 60px;
 }
 
 #settings {
 	position: absolute;
-	top: 110px;
+	top: 190px;
 	left: 15px;
 }
 
@@ -48,13 +63,13 @@
 
 #howToPlay {
 	position: absolute;
-	top: 110px;
+	top: 190px;
 	left: 125px;
 }
 
 #copyright {
 	position: absolute;
-	top: 150px;
+	top: 230px;
 	left: 75px;
 	color: #666666;
 	font-size: 12px;
