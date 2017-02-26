@@ -13,9 +13,9 @@
 /* Start menu stuff */
 
 .startActive {
-	height: 180px;
-	width: 250px;
-	top: 200px;
+	display: block;
+	margin: 0 auto;
+	padding: 15px;
 }
 
 #startMenuItems {
@@ -23,39 +23,33 @@
 	display: inline;
 }
 
-#newGame {
-	width: 135px;
-	position: absolute;
+.centered {
+	display: block;
 	margin: 0 auto;
-	top: 30px;
-	left: calc((100% - 135px)/2);
 }
 
-#newGameButt {
-	padding: 15px 15px;
-	height: 60px;
+.centeringContainer {
+	display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;  
 }
 
-#settings {
-	position: absolute;
-	top: 110px;
-	left: 15px;
+.startButton {
+	display: block;
+	margin: 10px auto;
+	padding: 15px;
+}
+
+.otherButton {
+	display: inline-block;
 }
 
 #settingsButt {
 	width: 100px;
 }
 
-#howToPlay {
-	position: absolute;
-	top: 110px;
-	left: 125px;
-}
-
 #copyright {
-	position: absolute;
-	top: 150px;
-	left: 75px;
 	color: #666666;
 	font-size: 12px;
 }
