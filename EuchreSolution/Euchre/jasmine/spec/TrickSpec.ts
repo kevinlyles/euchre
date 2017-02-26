@@ -67,8 +67,8 @@ describe("Trick", function () {
 
 		it("Stops when all players have played", function () {
 			trick.playTrickStep(new Card(Suit.Spades, Rank.Ace));
-			trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace));
 			trick.playTrickStep(new Card(Suit.Diamonds, Rank.Ace));
+			trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace));
 			trick.playTrickStep(new Card(Suit.Clubs, Rank.Ace));
 			trick.playTrickStep(new Card(Suit.Spades, Rank.Right));
 			expect(trick.playersPlayed()).toBe(4);
@@ -86,14 +86,14 @@ describe("Trick", function () {
 		});
 
 		it("Does not change after the first lead", function () {
-			trick.playTrickStep(new Card(Suit.Diamonds, Rank.Ace));
-			expect(trick.suitLead()).toBe(Suit.Diamonds);
-			trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace));
-			expect(trick.suitLead()).toBe(Suit.Diamonds);
-			trick.playTrickStep(new Card(Suit.Clubs, Rank.Ace));
-			expect(trick.suitLead()).toBe(Suit.Diamonds);
 			trick.playTrickStep(new Card(Suit.Spades, Rank.Ace));
-			expect(trick.suitLead()).toBe(Suit.Diamonds);
+			expect(trick.suitLead()).toBe(Suit.Spades);
+			trick.playTrickStep(new Card(Suit.Diamonds, Rank.Ace));
+			expect(trick.suitLead()).toBe(Suit.Spades);
+			trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace));
+			expect(trick.suitLead()).toBe(Suit.Spades);
+			trick.playTrickStep(new Card(Suit.Clubs, Rank.Ace));
+			expect(trick.suitLead()).toBe(Suit.Spades);
 		});
 	});
 
@@ -204,12 +204,16 @@ describe("Trick", function () {
 	});
 
 	describe("playTrickStep", function () {
+		beforeEach(function () {
+			trick = new Trick(Suit.Spades, false, hands, aiPlayers, Player.West);
+		});
+
 		it("Handles a null card", function () {
-			expect(trick.playTrickStep(null)).toEqual(hands[Player.South][0]);
+			expect(trick.playTrickStep(null)).toEqual(hands[Player.West][0]);
 		});
 
 		it("Handles a non-null card that's not in the player's hand", function () {
-			expect(trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace))).toEqual(hands[Player.South][0]);
+			expect(trick.playTrickStep(new Card(Suit.Clubs, Rank.Ace))).toEqual(hands[Player.West][0]);
 		});
 
 		it("Handles a card that's in the player's hand but not legal to play", function () {
@@ -223,8 +227,14 @@ describe("Trick", function () {
 		});
 
 		it("Enforces the right play order", function () {
-			expect(trick.playTrickStep(new Card(Suit.Spades, Rank.Ace))).toEqual(new Card(Suit.Spades, Rank.Ace));
-			expect(function () { trick.playTrickStep(new Card(Suit.Clubs, Rank.Ace)) }).toThrow();
+			expect(trick.playTrickStep(new Card(Suit.Diamonds, Rank.Ace))).toEqual(new Card(Suit.Diamonds, Rank.Ace));
+			expect(trick.currentPlayer()).toBe(Player.North);
+			trick.playTrickStep(new Card(Suit.Hearts, Rank.Ace));
+			expect(trick.currentPlayer()).toBe(Player.East);
+			let playedCards = trick.cardsPlayed();
+			expect(playedCards.length).toBe(2);
+			expect(playedCards[0].player).toBe(Player.West);
+			expect(playedCards[1].player).toBe(Player.North);
 		});
 	});
 
@@ -270,6 +280,8 @@ describe("Trick", function () {
 		});
 
 		it("Updates correctly", function () {
+			trick = new Trick(Suit.Spades, false, hands, aiPlayers, Player.West);
+
 			trick.playTrickStep(null);
 			expect(trick.winningTeam()).toBe(Team.EastWest);
 			trick.playTrickStep(null);
