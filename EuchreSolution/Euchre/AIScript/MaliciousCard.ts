@@ -29,7 +29,7 @@ class MaliciousCard extends Card {
 
 	get suit(): Suit {
 		this.__suitAccessCount++;
-		if (this.__suitAccessCount === this.__suitCount + 1) {
+		if (this.__suitAccessCount <= this.__suitCount) {
 			return this.__startingSuit;
 		}
 		return this.__laterSuit;
@@ -42,7 +42,7 @@ class MaliciousCard extends Card {
 
 	get rank(): Rank {
 		this.__rankAccessCount++;
-		if (this.__suitAccessCount === this.__rankCount + 1) {
+		if (this.__suitAccessCount <= this.__rankCount) {
 			return this.__startingRank;
 		}
 		return this.__laterRank;
@@ -55,7 +55,7 @@ class MaliciousCard extends Card {
 
 	get id(): string {
 		this.__idAccessCount++;
-		if (this.__idAccessCount === this.__idCount + 1) {
+		if (this.__idAccessCount <= this.__idCount) {
 			return this.__startingId;
 		}
 		return this.__laterId;
