@@ -13,12 +13,18 @@ function newGame(): void {
 	controller.playGames();
 }
 
+function simulateHand(): void {
+	disappearMenu("start");
+	appearMenu("simulateHand");
+}
+
 function settings(): void {
 	disappearMenu("start");
 	appearMenu("settings");
 }
 
 function back(): void {
+	disappearMenu("simulateHand");
 	disappearMenu("settings");
 	disappearMenu("howTo");
 	appearMenu("start");
