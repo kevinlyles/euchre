@@ -15,6 +15,7 @@ function newGame(): void {
 
 function simulateHand(): void {
 	disappearMenu("start");
+	updateActions();
 	appearMenu("simulateHand");
 }
 

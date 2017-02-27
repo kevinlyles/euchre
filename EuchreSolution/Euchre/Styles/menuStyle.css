@@ -88,8 +88,8 @@ h4 {
 /* Settings menu stuff */
 
 .simulateHandActive {
-	height: 422px;
-	width: 200px;
+	height: 376px;
+	width: 400px;
 	top: calc((100% - 422px) / 2);
 }
 
