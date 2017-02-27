@@ -10,7 +10,6 @@
 	<script src="GameScript/hand.js" type="text/javascript"></script>
 	<script src="GameScript/bid.js" type="text/javascript"></script>
 	<script src="GameScript/game.js" type="text/javascript"></script>
-	<script src="GameScript/simulateHand.js" type="text/javascript"></script>
 	<script src="GameScript/menuLogic.js" type="text/javascript"></script>
 	<script src="GameScript/playerAPI.js" type="text/javascript"></script>
 	<script src="AIScript/decentAI.js" type="text/javascript"></script>
@@ -21,6 +20,8 @@
 	<script src="AIScript/KevinAI.js" type="text/javascript"></script>
 	<script src="AIScript/KevinAI-old.js" type="text/javascript"></script>
 	<script src="AIScript/MultiAI.js" type="text/javascript"></script>
+	<script src="SimulationScript/simulateHand.js" type="text/javascript"></script>
+	<script src="SimulationScript/SimulationWorker.js" type="text/javascript"></script>
 	<link rel="stylesheet" type="text/css" href="Styles/style.css" id="style"/>
 	<link rel="stylesheet" type="text/css" href="Styles/menuStyle.css" id="menuStyle"/>
 
@@ -69,153 +70,201 @@
 				<!--Settings menu-->
 				<div id="simulateHandMenuItems" class="menuItems">
 					<h3>Simulate Hand</h3>
-					<div>
-						<h4>Cards in hand</h4>
-						<table>
-							<tr>
-								<td>
-									<select id="card1Suit">
-										<option disabled selected value>Suit</option>
-										<option value="C">Clubs</option>
-										<option value="D">Diamonds</option>
-										<option value="H">Hearts</option>
-										<option value="S">Spades</option>
-									</select>
-								</td>
-								<td>
-									<select id="card1Rank">
-										<option disabled selected value>Rank</option>
-										<option value="14">Ace</option>
-										<option value="13">King</option>
-										<option value="12">Queen</option>
-										<option value="11">Jack</option>
-										<option value="10">Ten</option>
-										<option value="9">Nine</option>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<select id="card2Suit">
-										<option disabled selected value>Suit</option>
-										<option value="C">Clubs</option>
-										<option value="D">Diamonds</option>
-										<option value="H">Hearts</option>
-										<option value="S">Spades</option>
-									</select>
-								</td>
-								<td>
-									<select id="card2Rank">
-										<option disabled selected value>Rank</option>
-										<option value="14">Ace</option>
-										<option value="13">King</option>
-										<option value="12">Queen</option>
-										<option value="11">Jack</option>
-										<option value="10">Ten</option>
-										<option value="9">Nine</option>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<select id="card3Suit">
-										<option disabled selected value>Suit</option>
-										<option value="C">Clubs</option>
-										<option value="D">Diamonds</option>
-										<option value="H">Hearts</option>
-										<option value="S">Spades</option>
-									</select>
-								</td>
-								<td>
-									<select id="card3Rank">
-										<option disabled selected value>Rank</option>
-										<option value="14">Ace</option>
-										<option value="13">King</option>
-										<option value="12">Queen</option>
-										<option value="11">Jack</option>
-										<option value="10">Ten</option>
-										<option value="9">Nine</option>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<select id="card4Suit">
-										<option disabled selected value>Suit</option>
-										<option value="C">Clubs</option>
-										<option value="D">Diamonds</option>
-										<option value="H">Hearts</option>
-										<option value="S">Spades</option>
-									</select>
-								</td>
-								<td>
-									<select id="card4Rank">
-										<option disabled selected value>Rank</option>
-										<option value="14">Ace</option>
-										<option value="13">King</option>
-										<option value="12">Queen</option>
-										<option value="11">Jack</option>
-										<option value="10">Ten</option>
-										<option value="9">Nine</option>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<select id="card5Suit">
-										<option disabled selected value>Suit</option>
-										<option value="C">Clubs</option>
-										<option value="D">Diamonds</option>
-										<option value="H">Hearts</option>
-										<option value="S">Spades</option>
-									</select>
-								</td>
-								<td>
-									<select id="card5Rank">
-										<option disabled selected value>Rank</option>
-										<option value="14">Ace</option>
-										<option value="13">King</option>
-										<option value="12">Queen</option>
-										<option value="11">Jack</option>
-										<option value="10">Ten</option>
-										<option value="9">Nine</option>
-									</select>
-								</td>
-							</tr>
-						</table>
-						<h4>Trump candidate</h4>
-						<table>
-							<tr>
-								<td>
-									<select id="trumpCandidateSuit">
-										<option disabled selected value>Suit</option>
-										<option value="C">Clubs</option>
-										<option value="D">Diamonds</option>
-										<option value="H">Hearts</option>
-										<option value="S">Spades</option>
-									</select>
-								</td>
-								<td>
-									<select id="trumpCandidateRank">
-										<option disabled selected value>Rank</option>
-										<option value="14">Ace</option>
-										<option value="13">King</option>
-										<option value="12">Queen</option>
-										<option value="11">Jack</option>
-										<option value="10">Ten</option>
-										<option value="9">Nine</option>
-									</select>
-								</td>
-							</tr>
-						</table>
-						<h4>Dealer</h4>
-						<select id="dealerSelect">
-							<option value="S">Self</option>
-							<option value="W">Opponent on left</option>
-							<option value="N">Partner</option>
-							<option value="E">Opponent on right</option>
-						</select>
-					</div>
+					<table>
+						<tr>
+							<td>
+								<div>
+									<h4>Cards in hand</h4>
+									<table>
+										<tr>
+											<td>
+												<select id="card1Suit" onchange="cardChanged(1)">
+													<option disabled selected value>Suit</option>
+													<option value="C">Clubs</option>
+													<option value="D">Diamonds</option>
+													<option value="H">Hearts</option>
+													<option value="S">Spades</option>
+												</select>
+											</td>
+											<td>
+												<select id="card1Rank" onchange="cardChanged(1)">
+													<option disabled selected value>Rank</option>
+													<option value="14">Ace</option>
+													<option value="13">King</option>
+													<option value="12">Queen</option>
+													<option value="11">Jack</option>
+													<option value="10">Ten</option>
+													<option value="9">Nine</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<select id="card2Suit" onchange="cardChanged(2)">
+													<option disabled selected value>Suit</option>
+													<option value="C">Clubs</option>
+													<option value="D">Diamonds</option>
+													<option value="H">Hearts</option>
+													<option value="S">Spades</option>
+												</select>
+											</td>
+											<td>
+												<select id="card2Rank" onchange="cardChanged(2)">
+													<option disabled selected value>Rank</option>
+													<option value="14">Ace</option>
+													<option value="13">King</option>
+													<option value="12">Queen</option>
+													<option value="11">Jack</option>
+													<option value="10">Ten</option>
+													<option value="9">Nine</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<select id="card3Suit" onchange="cardChanged(3)">
+													<option disabled selected value>Suit</option>
+													<option value="C">Clubs</option>
+													<option value="D">Diamonds</option>
+													<option value="H">Hearts</option>
+													<option value="S">Spades</option>
+												</select>
+											</td>
+											<td>
+												<select id="card3Rank" onchange="cardChanged(3)">
+													<option disabled selected value>Rank</option>
+													<option value="14">Ace</option>
+													<option value="13">King</option>
+													<option value="12">Queen</option>
+													<option value="11">Jack</option>
+													<option value="10">Ten</option>
+													<option value="9">Nine</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<select id="card4Suit" onchange="cardChanged(4)">
+													<option disabled selected value>Suit</option>
+													<option value="C">Clubs</option>
+													<option value="D">Diamonds</option>
+													<option value="H">Hearts</option>
+													<option value="S">Spades</option>
+												</select>
+											</td>
+											<td>
+												<select id="card4Rank" onchange="cardChanged(4)">
+													<option disabled selected value>Rank</option>
+													<option value="14">Ace</option>
+													<option value="13">King</option>
+													<option value="12">Queen</option>
+													<option value="11">Jack</option>
+													<option value="10">Ten</option>
+													<option value="9">Nine</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<select id="card5Suit" onchange="cardChanged(5)">
+													<option disabled selected value>Suit</option>
+													<option value="C">Clubs</option>
+													<option value="D">Diamonds</option>
+													<option value="H">Hearts</option>
+													<option value="S">Spades</option>
+												</select>
+											</td>
+											<td>
+												<select id="card5Rank" onchange="cardChanged(5)">
+													<option disabled selected value>Rank</option>
+													<option value="14">Ace</option>
+													<option value="13">King</option>
+													<option value="12">Queen</option>
+													<option value="11">Jack</option>
+													<option value="10">Ten</option>
+													<option value="9">Nine</option>
+												</select>
+											</td>
+										</tr>
+									</table>
+									<h4>Trump candidate</h4>
+									<table>
+										<tr>
+											<td>
+												<select id="trumpCandidateSuit" onchange="cardChanged(0)">
+													<option disabled selected value>Suit</option>
+													<option value="C">Clubs</option>
+													<option value="D">Diamonds</option>
+													<option value="H">Hearts</option>
+													<option value="S">Spades</option>
+												</select>
+											</td>
+											<td>
+												<select id="trumpCandidateRank" onchange="cardChanged(0)">
+													<option disabled selected value>Rank</option>
+													<option value="14">Ace</option>
+													<option value="13">King</option>
+													<option value="12">Queen</option>
+													<option value="11">Jack</option>
+													<option value="10">Ten</option>
+													<option value="9">Nine</option>
+												</select>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+							<td>
+							</td>
+							<td>
+							</td>
+							<td>
+								<div>
+									<div>
+										<label for="dealerSelect">Dealer:</label>
+										<select id="dealerSelect" onchange="updateActions()">
+											<option value="S">Self</option>
+											<option value="W">Opponent on left</option>
+											<option value="N">Partner</option>
+											<option value="E">Opponent on right</option>
+										</select>
+									</div>
+									<div>
+										<input type="checkbox" id="orderItUp" onchange="updateActions()">
+											<label for="orderItUp">Order it up?</label>
+										</input>
+									</div>
+									<div>
+										<label for="discardSelect">Discard:</label>
+										<select id="discardSelect" onchange="updateActions()">
+											<option disabled selected value>None</option>
+											<option value="1">Card 1</option>
+											<option value="2">Card 2</option>
+											<option value="3">Card 3</option>
+											<option value="4">Card 4</option>
+											<option value="5">Card 5</option>
+											<option value="0">Trump candidate</option>
+										</select>
+									</div>
+									<div>
+										<label for="suitToCall">Suit to call:</label>
+										<select id="suitToCall" onchange="updateActions()">
+											<option disabled selected value>Suit</option>
+											<option value="C">Clubs</option>
+											<option value="D">Diamonds</option>
+											<option value="H">Hearts</option>
+											<option value="S">Spades</option>
+										</select>
+									</div>
+									<div>
+										<input type="checkbox" id="goAlone" onchange="updateActions()">
+											<label for="goAlone">Go alone?</label>
+										</input>
+									</div>
+								</div>
+							</td>
+						</tr>
+					</table>
 					<div id="simulateHandButtons">
 						<button onclick="back()">
 							Back
