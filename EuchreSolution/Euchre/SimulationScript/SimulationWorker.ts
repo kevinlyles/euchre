@@ -2,30 +2,30 @@ declare function postMessage(message: any): void;  //Workaround so TypeScript co
 
 function simulateHand_worker() {  //Workaround for Chrome not allowing scripts from file://
 	onmessage = function (message: MessageEvent): void {
-		let data = message.data;
+		const data = message.data;
 		let i = 0;
-		let deck: Card[] = data[i++];
-		let hand: Card[] = data[i++];
-		let trumpCandidate: Card = data[i++];
-		let dealer: Player = data[i++];
-		let orderItUp: boolean = data[i++];
-		let discard: Card | null = data[i++];
-		let suitToCall: Suit | null = data[i++];
-		let goAlone: boolean = data[i++];
+		const deck: Card[] = data[i++];
+		const hand: Card[] = data[i++];
+		const trumpCandidate: Card = data[i++];
+		const dealer: Player = data[i++];
+		const orderItUp: boolean = data[i++];
+		const discard: Card | null = data[i++];
+		const suitToCall: Suit | null = data[i++];
+		const goAlone: boolean = data[i++];
 
 		simulate(deck, hand, trumpCandidate, dealer, orderItUp, discard,
 			suitToCall, goAlone);
-	}
+	};
 
 	function simulate(deck: Card[], hand: Card[], trumpCandidate: Card,
 		dealer: Player, orderItUp: boolean, discard: Card | null,
 		suitToCall: Suit | null, goAlone: boolean): void {
-		let permutation: string[] = [];
+		const permutation: string[] = [];
 		let i = 0;
-		let startTime = performance.now();
+		const startTime = performance.now();
 		let cycleTime = startTime;
 		while (nextPermutation(permutation)) {
-			i++
+			i++;
 			if (performance.now() - cycleTime >= 1000) {
 				postMessage(["progress", i]);
 				cycleTime = performance.now();
@@ -37,7 +37,7 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 
 	function nextPermutation(lastPermutation: string[]): boolean {
 		if (lastPermutation.length === 0) {
-			for (let character of "EEEEEKKKNNNNNWWWWW".split("")) {
+			for (const character of "EEEEEKKKNNNNNWWWWW".split("")) {
 				lastPermutation.push(character);
 			}
 			return true;
