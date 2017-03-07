@@ -95,31 +95,6 @@ function dealHands(deck: Card[], playerHands: Card[][], dealer: Player): void {
 
 //}
 
-//**NOT TESTING**
-function getAIBid(currentPlayer: Player, aiPlayer: EuchreAI, stage: BidStage, trumpCandidate: Card): BidResult | null {
-	let trump: Suit | null = null;
-
-	if (stage === BidStage.Round1) {
-		if (aiPlayer.chooseOrderUp()) {
-			trump = trumpCandidate.suit;
-		}
-	}
-	else if (stage === BidStage.Round2) {
-		trump = aiPlayer.pickTrump();
-	}
-
-	if (trump === null) {
-		return null;
-	}
-
-	return {
-		trump: trump,
-		maker: currentPlayer,
-		alone: aiPlayer.chooseGoAlone(),
-		stage: stage,
-	}
-}
-
 function calculatePointGain(tricksTaken: number, maker: boolean, alone?: boolean, defendingAlone?: boolean): number {
 	if (tricksTaken < 3) return 0;
 

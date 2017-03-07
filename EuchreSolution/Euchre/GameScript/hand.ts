@@ -13,12 +13,13 @@ class Hand {
 
 	//Playing related
 	private __trick: Trick;
-	private __numTricksPlayed: number = 0;
-	private __numPlayers: number = 0; //players playing this hand; this is usually 4 but can be 3 or 2 depending on loners
-	private __nsTricksWon: number = 0;
-	private __ewTricksWon: number = 0;
-	private __nsPointsWon: number = 0;
-	private __ewPointsWon: number = 0;
+	private __numTricksPlayed = 0;
+	private __numPlayers = 4; //players playing this hand; this is usually 4 but can be 3 or 2 depending on loners
+	private __nsTricksWon = 0;
+	private __ewTricksWon = 0;
+	private __nsPointsWon = 0;
+	private __ewPointsWon = 0;
+	private __tricks: PlayedCard[][] = [];
 
 	/* Properties */
 	public handStage(): HandStage {
@@ -67,7 +68,7 @@ class Hand {
 
 		//set up bidding
 		this.__handStage = HandStage.Bidding;
-		this.__bid = new Bid(this.__playerHands, this.__aiPlayers, nextPlayer(this.__dealer), this.__trumpCandidate);
+		this.__bid = new Bid(this.__playerHands, this.__aiPlayers, this.__dealer, this.__trumpCandidate);
 	}
 
 	private advanceHand(): void {
@@ -84,9 +85,8 @@ class Hand {
 			case HandStage.Discard:
 				this.discard();
 				this.__handStage = HandStage.PlayTricks;
-				if (this.__bidResult) {
-					this.__trick = new Trick(this.__bidResult.trump as Suit, this.__bidResult.alone as boolean, this.__playerHands, this.__aiPlayers, nextPlayer(this.__dealer));
-				}
+				let bidResult = this.__bidResult as BidResult;
+				this.__trick = new Trick(bidResult.trump, bidResult.alone, this.__playerHands, this.__aiPlayers, bidResult.maker, nextPlayer(this.__dealer), []);
 				break;
 			case HandStage.PlayTricks:
 				let trickEnded = this.__trick.doTrick();
@@ -117,7 +117,7 @@ class Hand {
 		}
 		else {
 			this.__handStage = HandStage.PlayTricks;
-			this.__trick = new Trick(bidResult.trump as Suit, bidResult.alone as boolean, this.__playerHands, this.__aiPlayers, nextPlayer(this.__dealer));
+			this.__trick = new Trick(bidResult.trump, bidResult.alone, this.__playerHands, this.__aiPlayers, bidResult.maker, nextPlayer(this.__dealer), []);
 		}
 	}
 
@@ -126,7 +126,8 @@ class Hand {
 		let toDiscard: Card | null = null;
 
 		if (aiPlayer !== null) {
-			toDiscard = aiPlayer.pickDiscard();
+			let bidResult = this.__bidResult as BidResult;
+			toDiscard = aiPlayer.pickDiscard(this.__playerHands[this.__dealer], bidResult.trump);
 		}
 		if (!toDiscard) {
 			toDiscard = this.__playerHands[this.__dealer][0];
@@ -136,6 +137,7 @@ class Hand {
 	}
 
 	private endTrick(): void {
+		this.__tricks.push(this.__trick.cardsPlayed());
 		if (this.__trick.winningTeam() === Team.NorthSouth) {
 			this.__nsTricksWon++;
 			animShowText("NS won this trick", MessageLevel.Step, 2);
@@ -147,6 +149,9 @@ class Hand {
 		this.__numTricksPlayed++;
 		if (this.__numTricksPlayed >= 5) {
 			this.endHand(true);
+		} else {
+			let bidResult = this.__bidResult as BidResult;
+			this.__trick = new Trick(bidResult.trump, bidResult.alone, this.__playerHands, this.__aiPlayers, bidResult.maker, this.__trick.currentPlayer(), this.__tricks);
 		}
 	}
 
