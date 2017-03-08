@@ -16,6 +16,11 @@ function newGame(): void {
 function simulateHand(): void {
 	disappearMenu("start");
 	updateActions();
+	const numCores = navigator.hardwareConcurrency;
+	if (numCores && numCores > 0) {
+		const numberOfThreadsSelect = document.getElementById("numberOfThreads") as HTMLSelectElement;
+		numberOfThreadsSelect.selectedIndex = numCores - 1;
+	}
 	appearMenu("simulateHand");
 }
 
