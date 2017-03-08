@@ -106,15 +106,33 @@ class Hand {
 	}
 
 	/* constructor */
-	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[]) {
+	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[], playerHands?: Card[][], trumpCandidate?: Card) {
 		this.__dealer = dealer;
 		this.__aiPlayers = aiPlayers;
 
+		let jacks: Card[];
 		//set up the deck and everyone's hands
-		let {deck, jacks} = getShuffledDeck();
-		this.__playerHands = [[], [], [], []];
-		dealHands(deck, this.__playerHands, this.__dealer);
-		this.__trumpCandidate = deck.pop() as Card;
+		if (playerHands && trumpCandidate) {
+			this.__playerHands = playerHands;
+			jacks = [];
+			for (let playerHand of this.__playerHands) {
+				for (let card of playerHand) {
+					if (card.rank === Rank.Jack) {
+						jacks[card.suit] = card;
+					}
+				}
+			}
+			this.__trumpCandidate = trumpCandidate
+			if (trumpCandidate.rank === Rank.Jack) {
+				jacks[trumpCandidate.suit] = trumpCandidate;
+			}
+		} else {
+			let {deck, jacks: shuffledJacks} = getShuffledDeck();
+			jacks = shuffledJacks;
+			this.__playerHands = [[], [], [], []];
+			dealHands(deck, this.__playerHands, this.__dealer);
+			this.__trumpCandidate = deck.pop() as Card;
+		}
 
 		//set up bidding
 		this.__handStage = HandStage.Bidding;

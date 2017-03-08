@@ -412,7 +412,7 @@ function animShowText(text: string, messageLevel: MessageLevel, nest?: number, o
 }
 
 function updateLog(text: string, overwrite?: boolean): void {
-	let div = document.getElementById("sidebarText");
+	let div = typeof document !== "undefined" && document.getElementById("sidebarText");
 	if (!div) {
 		return;
 	}

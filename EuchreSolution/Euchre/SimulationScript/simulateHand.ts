@@ -259,6 +259,9 @@ function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player,
 	var worker = new Worker(URL.createObjectURL(blob));
 	worker.onmessage = handleMessage;
 	startTime = performance.now();
+	let url = document.location.href;
+	let index = url.lastIndexOf("/");
+	url = url.substring(0, index + 1);
 	worker.postMessage([
 		deck,
 		hand,
@@ -268,6 +271,7 @@ function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player,
 		discard,
 		suitToCall,
 		goAlone,
+		url,
 	]);
 }
 
@@ -276,28 +280,65 @@ let startTime: number;
 function handleMessage(message: MessageEvent) {
 	let data: any[] = message.data;
 	if (data[0] === "progress") {
-		let i: number = data[1];
-
-		let count = i;
-		let suffix = "";
-
-		if (count > 1e6) {
-			count /= 1e6;
-			suffix = "M";
-		} else if (count > 1e3) {
-			count /= 1e3;
-			suffix = "K";
-		}
-		let countString = count.toFixed(4 - count.toFixed(0).length) + suffix;
-
-		let percent = i / 617512896 * 100; // 617512896 = C(18,5) * C(13, 5) * C(8, 5)
-		let percentString = percent.toFixed(4 - percent.toFixed(0).length);
-
-		let time = (performance.now() - startTime) / 1000;
-		let timeString = time.toFixed(4 - time.toFixed(0).length);
-		updateLog(`${countString} (${percentString}%): ${timeString}s<br/>`);
+		let count: number = data[1];
+		let timeString = formatTime((performance.now() - startTime) / 1000);
+		updateLog(`${formatCount(count)}: ${timeString}<br/>`);
 	} else if (data[0] === "result") {
 		let result = data[1];
-		updateLog("Result: " + result + "<br/>");
+		updateLog(`Result:<br/>`);
+		updateLog(`Wins: ${formatCount(result.true)}<br/>`);
+		updateLog(`Losses: ${formatCount(result.false)}<br/>`);
+		let expectedPointGain = 0;
+		let count = 0;
+		for (let i in result) {
+			if (i === "true" || i === "false") {
+				continue;
+			}
+			let pointChange = parseInt(i);
+			let resultCount = result[i];
+			let changeString = pointChange > 0 ? "Gained" : "Lost";
+			updateLog(`${changeString} ${i} points: ${formatCount(resultCount)}<br/>`);
+			count += resultCount;
+			expectedPointGain += pointChange * resultCount;
+		}
+		expectedPointGain /= count;
+		updateLog(`Expected point gain: ${expectedPointGain.toFixed(2)}<br/>`);
+		let timeString = formatTime((performance.now() - startTime) / 1000);
+		updateLog(`Total time: ${timeString}<br/>`);
 	}
+}
+
+function formatCount(count: number): string {
+	let percent = count / 617512896 * 100; // 617512896 = C(18,5) * C(13, 5) * C(8, 5)
+	let percentString = percent.toFixed(4 - percent.toFixed(0).length);
+	let suffix = "";
+	if (count > 1e6) {
+		count /= 1e6;
+		suffix = "M";
+	} else if (count > 1e3) {
+		count /= 1e3;
+		suffix = "K";
+	}
+	let countString = count.toFixed(4 - count.toFixed(0).length) + suffix;
+	return `${countString} (${percentString}%)`;
+}
+
+function formatTime(time: number): string {
+	if (time < 10) {
+		return `${time.toFixed(3)}s`
+	}
+	if (time < 100) {
+		return `${time.toFixed(2)}s`
+	}
+	let minutes = Math.floor(time / 60);
+	if (minutes < 100) {
+		let seconds = Math.floor(time % 60);
+		return `${minutes}m${seconds}s`
+	}
+	let hours = Math.floor(minutes / 60);
+	if (hours < 100) {
+		return `${hours}h${minutes}m`
+	}
+	let days = Math.floor(hours / 24);
+	return `${days}d${hours}h`
 }
