@@ -42,7 +42,17 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 			new MultiAI(new DoesNotBidAI(), new KevinAI()),
 			new MultiAI(new DoesNotBidAI(), new KevinAI()),
 		];
-		let results: { [index: string]: number } = {};
+		let results: { [index: string]: number } = {
+			"true": 0,
+			"false": 0,
+			"-2": 0,
+			"1": 0,
+		};
+		if (goAlone) {
+			results["4"] = 0;
+		} else {
+			results["2"] = 0;
+		}
 		let i = 0;
 		let startTime = performance.now();
 		let cycleTime = startTime;
@@ -84,6 +94,9 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 				lastPermutation.push(character);
 			}
 			return true;
+		}
+		if (lastPermutation[3] === "K") {
+			return false;
 		}
 		let i = lastPermutation.length - 1;
 		let j = i;
