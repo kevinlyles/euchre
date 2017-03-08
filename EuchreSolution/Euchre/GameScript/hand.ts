@@ -108,7 +108,11 @@ class Hand {
 	}
 
 	/* constructor */
-	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[], settings: Settings) {
+	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[], settings: Settings);
+	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[], settings: Settings,
+		playerHands: Card[][], trumpCandidate: Card);
+	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[], settings: Settings,
+		playerHands?: Card[][], trumpCandidate?: Card) {
 		this.__settings = settings;
 		this.__dealer = dealer;
 		this.__aiPlayers = aiPlayers;
@@ -121,11 +125,29 @@ class Hand {
 			}
 		}
 
+		let jacks: Card[];
 		//set up the deck and everyone's hands
-		const { deck, jacks } = getShuffledDeck();
-		this.__playerHands = [[], [], [], []];
-		dealHands(deck, this.__playerHands, this.__dealer);
-		this.__trumpCandidate = deck.pop() as Card;
+		if (playerHands && trumpCandidate) {
+			this.__playerHands = playerHands;
+			jacks = [];
+			for (const playerHand of this.__playerHands) {
+				for (const card of playerHand) {
+					if (card.rank === Rank.Jack) {
+						jacks[card.suit] = card;
+					}
+				}
+			}
+			this.__trumpCandidate = trumpCandidate;
+			if (trumpCandidate.rank === Rank.Jack) {
+				jacks[trumpCandidate.suit] = trumpCandidate;
+			}
+		} else {
+			const { deck, jacks: shuffledJacks } = getShuffledDeck();
+			jacks = shuffledJacks;
+			this.__playerHands = [[], [], [], []];
+			dealHands(deck, this.__playerHands, this.__dealer);
+			this.__trumpCandidate = deck.pop() as Card;
+		}
 
 		animDeal(this.__playerHands, this.__trumpCandidate, this.__dealer, this.__settings);
 
