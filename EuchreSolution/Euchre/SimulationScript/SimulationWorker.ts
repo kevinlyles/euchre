@@ -13,6 +13,12 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		let suitToCall: Suit | null = data[i++];
 		let goAlone: boolean = data[i++];
 		let baseURL: string = data[i++];
+		let startPermutationString: string | undefined = data[i++];
+		let startPermutation: string[] = [];
+		if (startPermutationString) {
+			startPermutation = startPermutationString.split("");
+		}
+		let endPermutation: string | undefined = data[i++];
 
 		importScripts(baseURL + 'GameScript/xor4096.js');
 		importScripts(baseURL + 'GameScript/globs.js');
@@ -28,13 +34,14 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		importScripts(baseURL + 'AIScript/KevinAI.js');
 
 		simulate(deck, hand, trumpCandidate, dealer, orderItUp, discard,
-			suitToCall, goAlone);
+			suitToCall, goAlone, startPermutation, endPermutation);
 	}
 
 	function simulate(deck: Card[], playerHand: Card[], trumpCandidate: Card,
 		dealer: Player, orderItUp: boolean, discard: Card | null,
-		suitToCall: Suit | null, goAlone: boolean): void {
-		let permutation: string[] = [];
+		suitToCall: Suit | null, goAlone: boolean,
+		startPermutation: string[], endPermutation: string | undefined): void {
+		let permutation: string[] = startPermutation;
 		let bidderAI = new BiddingTestAI(orderItUp, suitToCall, goAlone, discard || undefined);
 		let aiPlayers = [
 			new MultiAI(bidderAI, new KevinAI()),
@@ -69,13 +76,16 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 				postMessage(["progress", i]);
 				cycleTime = performance.now();
 			}
+			if (endPermutation && permutation.join("") === endPermutation) {
+				break;
+			}
 		}
 		postMessage(["result", results]);
 		close();
 	}
 
 	function deal(deck: Card[], hand: Card[], permutation: string[]): Card[][] {
-		let playerHands = [hand, [], [], []];
+		let playerHands = [hand.slice(), [], [], []];
 		let pushTo: { [index: string]: Card[] } = {
 			E: playerHands[Player.East],
 			K: [],
@@ -94,9 +104,6 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 				lastPermutation.push(character);
 			}
 			return true;
-		}
-		if (lastPermutation[3] === "K") {
-			return false;
 		}
 		let i = lastPermutation.length - 1;
 		let j = i;

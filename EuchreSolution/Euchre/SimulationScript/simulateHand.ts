@@ -84,7 +84,7 @@ function startSimulation(): void {
 
 	updateLog("Starting computation...<br/>");
 	disappearMenu("simulateHand");
-	startWorker(hand, trumpCandidate, dealer, orderItUp, discard, suitToCall, goAlone, numberOfThreads);
+	startWorkers(hand, trumpCandidate, dealer, orderItUp, discard, suitToCall, goAlone, numberOfThreads);
 }
 
 function getCard(elementIdBase: string, cardName?: string): Card | null {
@@ -247,11 +247,11 @@ function buildDeck(hand: Card[], trumpCandidate: Card): Card[] {
 	return deck;
 }
 
-/*function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player.South, orderItUp: true, discard: Card, suitToCall: null, goAlone: boolean): void
-function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player.North | Player.East | Player.West, orderItUp: true, discard: null, suitToCall: null, goAlone: boolean): void
-function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player, orderItUp: false, discard: null, suitToCall: Suit, goAlone: boolean): void
-function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player, orderItUp: false, discard: null, suitToCall: null, goAlone: false): void*/
-function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player,
+/*function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player.South, orderItUp: true, discard: Card, suitToCall: null, goAlone: boolean): void
+function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player.North | Player.East | Player.West, orderItUp: true, discard: null, suitToCall: null, goAlone: boolean): void
+function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player, orderItUp: false, discard: null, suitToCall: Suit, goAlone: boolean): void
+function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player, orderItUp: false, discard: null, suitToCall: null, goAlone: false): void*/
+function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player,
 	orderItUp: boolean, discard: Card | null, suitToCall: Suit | null,
 	goAlone: boolean, numberOfThreads: number = 1): void {
 	let deck = buildDeck(hand, trumpCandidate);
@@ -259,10 +259,12 @@ function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player,
 	var workerAsString = "(" + simulateHand_worker.toString() + ")()";
 	var blob = new Blob([workerAsString], { type: 'text/javascript' });
 	startTime = performance.now();
+	threadNumber = 0;
 	let url = document.location.href;
 	let index = url.lastIndexOf("/");
 	url = url.substring(0, index + 1);
 
+	//TODO: switch this from the workers checking each time to a timer?
 	for (let i = 0; i < numberOfThreads; i++) {
 		var worker = new Worker(URL.createObjectURL(blob));
 		worker.onmessage = handleMessage(numberOfThreads);
@@ -276,12 +278,33 @@ function startWorker(hand: Card[], trumpCandidate: Card, dealer: Player,
 			suitToCall,
 			goAlone,
 			url,
+			breakPoints[numberOfThreads][threadNumber - 1],
+			breakPoints[numberOfThreads][threadNumber],
 		]);
 	}
 }
 
+const breakPoints: { [index: number]: string[] } = {
+	1: [],
+	2: ["NENWWNNEWKKNEKEEWW"],
+	3: ["KKKNEEEEENNNNWWWWW", "NWKEENENKWNKWWEENW"],
+	4: ["EWNNWNWEKKEENNEKWW", "NENWWNNEWKKNEKEEWW", "WEKNEWNENWWWEKEKNN"],
+	5: ["EWEEWWKWNENNWKKNEN", "KWEKEWNKWNNNEEEWWN", "NNKKENWKWEEWWNWENE", "WEWWEENNEEKNNKWWNK"],
+	6: ["ENNWKNWWEENWKNEEKW", "KKKNEEEEENNNNWWWWW", "NENWWNNEWKKNEKEEWW", "NWKEENENKWNKWWEENW", "WKNNENKNNWKEWEWEWE"],
+	7: ["ENKNNEWENWWNEWEKKW", "KEENWWNENWWWEKEKNN", "KWNWEKEEWNNNNWEEKW", "NKWWEEWENENKKNENWW", "NWWNEWENKKEWEWNEKN", "WNEENNWNENWEWEKWKK"],
+	8: ["ENENNENEWEWWNKKWWK", "EWNNWNWEKKEENNEKWW", "KNNNNNWEEEEEKKWWWW", "NENWWNNEWKKNEKEEWW", "NNWEWEEKKNKNNWEEWW", "WEKNEWNENWWWEKEKNN", "WNEWKWNWKEEKNWNENE"],
+	9: ["EKWWENWKEENNWWNEKN", "EWKKWEWWNEKNENNWNE", "KKKNEEEEENNNNWWWWW", "NEEEEEKKKNNNNWWWWW", "NKNNWWENEKWEEKEWWN", "NWKEENENKWNKWWEENW", "WENWENKKEENWWNKNEW", "WNKNWEWEKENEWENNWK"],
+	10: ["EKWEKENNWNENNEKWWW", "EWEEWWKWNENNWKKNEN", "KENEWWNENEKEWWWNNK", "KWEKEWNKWNNNEEEWWN", "NENWWNNEWKKNEKEEWW", "NNKKENWKWEEWWNWENE", "NWNWNKEWEKWEWEENKN", "WEWWEENNEEKNNKWWNK", "WNNEWNNKKEWKEEWWEN"],
+	11: ["EKNNEWWENNEWNKEKWW", "ENWKWNEWWEENKNWEKN", "EWWNWKEKNNWEENEWKN", "KNKEWWNEEENWNEWNKW", "NEENKWENEWNWKNEKWW", "NKKNWWKWENEEWEWNEN", "NNWWENKWENNKKWEEEW", "WEEKKEWEENWNKWNNNW", "WKEWNWKNNWNEKEENWE", "WNNWEENENKENWKWKEW"],
+	12: ["EKKWWEWWNEKNENNWNE", "ENNWKNWWEENWKNEEKW", "EWNNWNWEKKEENNEKWW", "KKKNEEEEENNNNWWWWW", "KWKWWKNEEEEENNNNWW", "NENWWNNEWKKNEKEEWW", "NNEKWEEWNWKKNEENWW", "NWKEENENKWNKWWEENW", "WEKNEWNENWWWEKEKNN", "WKNNENKNNWKEWEWEWE", "WNWEKKEWENENWKENNW"],
+	13: ["EKEWWNEKNEKWNWNEWN", "ENNEWENKNKWWEWWEKN", "EWKWNWKWEEWENNKENN", "KENWEWNWKENNNWEEKW", "KNWEWNKNENWEKWNEEW", "NEEWNKEWWWKNWENEKN", "NKEWKWNNNWNKEEWEEW", "NNNNNWEEEEEKKKWWWW", "NWNNEEEKWKEWENWKNW", "WENKWNEWNNEEKWWEKN", "WKWKWENNWEKNEWEENN", "WNWKNEEEKKNWNWEENW"],
+	14: ["EKENNNKEWNWEWNEKWW", "ENKNNEWENWWNEWEKKW", "EWEWNKWWNNWNKEEKEN", "KEENWWNENWWWEKEKNN", "KNEWEKWNNEKNNWEEWW", "KWNWEKEEWNNNNWEEKW", "NENWWNNEWKKNEKEEWW", "NKWWEEWENENKKNENWW", "NWEEKNWEKWNKNEENWW", "NWWNEWENKKEWEWNEKN", "WEWEKWNKNENNNWEEKW", "WNEENNWNENWEWEKWKK", "WNWNNEWEKEKEWENNWK"],
+	15: ["EKEENWKKNNWNENEWWW", "ENEWWKEKKNWNWNWNEE", "EWEEWWKWNENNWKKNEN", "EWWKWNNNNWKEKWEEEN", "KKKNEEEEENNNNWWWWW", "KWEKEWNKWNNNEEEWWN", "NEKENKNEWNWWENKWWE", "NKENEWWKENNEKNWEWW", "NNKKENWKWEEWWNWENE", "NWKEENENKWNKWWEENW", "WEENNEEKWNNWNKWKEW", "WEWWEENNEEKNNKWWNK", "WNENEWWEKNKWENNEWK", "WNWWNEWWEKKNENKEEN"],
+	16: ["EEWWNENKWWENWKEKNN", "ENENNENEWEWWNKKWWK", "ENWNWEKENWEWNWEKKN", "EWNNWNWEKKEENNEKWW", "KEWEKKNEEENNNNWWWW", "KNNNNNWEEEEEKKWWWW", "KWWKNWNEKEWNEWEENN", "NENWWNNEWKKNEKEEWW", "NKWENKEEWWENKWENNW", "NNWEWEEKKNKNNWEEWW", "NWNEWNKNEWENWEEKKW", "WEKNEWNENWWWEKEKNN", "WKENNENWEKNWEKENWW", "WNEWKWNWKEEKNWNENE", "WWEENKENWNKNENEKWW"],
+};
+
 let startTime: number;
-let threadNumber = 0;
+let threadNumber: number;
 let totalCount: number[] = [];
 let totalResults: { [index: string]: number }[] = [];
 
@@ -318,7 +341,7 @@ function handleMessage(numberOfThreads: number): (message: MessageEvent) => void
 					}
 				}
 			}
-			updateLog(`Result:<br/>`);
+			updateLog(`<h4>Results:</h4>`);
 			updateLog(`Wins: ${formatCount(result["true"])}<br/>`);
 			updateLog(`Losses: ${formatCount(result["false"])}<br/>`);
 			let expectedPointGain = 0;
@@ -355,26 +378,31 @@ function formatCount(count: number): string {
 		count /= 1e3;
 		suffix = "K";
 	}
-	let countString = count.toFixed(4 - count.toFixed(0).length) + suffix;
+	let countString = count.toFixed(0);
+	if (suffix) {
+		countString = count.toFixed(4 - countString.length) + suffix;
+	}
 	return `${countString} (${percentString}%)`;
 }
 
-function formatTime(time: number): string {
-	if (time < 10) {
-		return `${time.toFixed(3)}s`
+function formatTime(seconds: number): string {
+	if (seconds < 10) {
+		return `${seconds.toFixed(3)}s`
 	}
-	if (time < 100) {
-		return `${time.toFixed(2)}s`
+	if (seconds < 100) {
+		return `${seconds.toFixed(2)}s`
 	}
-	let minutes = Math.floor(time / 60);
+	let minutes = Math.floor(seconds / 60);
 	if (minutes < 100) {
-		let seconds = Math.floor(time % 60);
+		seconds = Math.floor(seconds) % 60;
 		return `${minutes}m${seconds}s`
 	}
 	let hours = Math.floor(minutes / 60);
 	if (hours < 100) {
+		minutes = minutes % 60;
 		return `${hours}h${minutes}m`
 	}
 	let days = Math.floor(hours / 24);
+	hours = hours % 24;
 	return `${days}d${hours}h`
 }
