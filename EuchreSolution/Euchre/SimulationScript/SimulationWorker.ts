@@ -1,25 +1,135 @@
-declare function postMessage(message: any): void;  //Workaround so TypeScript compiles
+declare function postMessage(message: Response): void;  //Workaround so TypeScript compiles
+
+type StartParams = {
+	workerId: number,
+	deck: Card[],
+	hand: Card[],
+	trumpCandidate: Card,
+	dealer: Player,
+	orderItUp: boolean,
+	discard: Card | null,
+	suitToCall: Suit | null,
+	goAlone: boolean,
+	baseURL: string,
+	startPermutation?: string,
+	endPermutation?: string,
+};
+
+type StartRequest = {
+	type: "start",
+	data: StartParams,
+};
+
+type ProgressRequest = {
+	type: "progress",
+}
+
+type Request = StartRequest | ProgressRequest;
+
+type Results = {
+	won: number,
+	lost: number,
+	pointValues: { [points: number]: number };
+}
+
+type ProgressResponse = {
+	type: "progress",
+	workerId: number,
+	numberProcessed: number,
+}
+
+type ResultsResponse = {
+	type: "results",
+	workerId: number,
+	results: Results,
+}
+
+type Response = ProgressResponse | ResultsResponse;
 
 function simulateHand_worker() {  //Workaround for Chrome not allowing scripts from file://
-	onmessage = function (message: MessageEvent): void {
-		let data = message.data;
-		let i = 0;
-		let deck: Card[] = data[i++];
-		let hand: Card[] = data[i++];
-		let trumpCandidate: Card = data[i++];
-		let dealer: Player = data[i++];
-		let orderItUp: boolean = data[i++];
-		let discard: Card | null = data[i++];
-		let suitToCall: Suit | null = data[i++];
-		let goAlone: boolean = data[i++];
-		let baseURL: string = data[i++];
-		let startPermutationString: string | undefined = data[i++];
-		let startPermutation: string[] = [];
-		if (startPermutationString) {
-			startPermutation = startPermutationString.split("");
-		}
-		let endPermutation: string | undefined = data[i++];
+	let i: number;
+	let workerId: number;
 
+	onmessage = function (message: MessageEvent): void {
+		let data: Request = message.data;
+
+		switch (data.type) {
+			case "start":
+				startSimulation(data.data);
+				break;
+			case "progress":
+				let message: ProgressResponse = {
+					type: "progress",
+					workerId: workerId,
+					numberProcessed: i,
+				};
+				postMessage(message);
+				break;
+		}
+	}
+
+	function simulate(deck: Card[], playerHand: Card[], trumpCandidate: Card,
+		dealer: Player, orderItUp: boolean, discard: Card | undefined,
+		suitToCall: Suit | null, goAlone: boolean,
+		startPermutation: string[], endPermutation: string | undefined): void {
+		let bidderAI = new BiddingTestAI(orderItUp, suitToCall, goAlone, discard);
+		let aiPlayers = [
+			new MultiAI(bidderAI, new KevinAI()),
+			new MultiAI(new DoesNotBidAI(), new KevinAI()),
+			new MultiAI(new DoesNotBidAI(), new KevinAI()),
+			new MultiAI(new DoesNotBidAI(), new KevinAI()),
+		];
+		let results = createBlankResults();
+		i = 0;
+		simulateLoop(aiPlayers, deck, playerHand, trumpCandidate, dealer, orderItUp,
+			discard, suitToCall, goAlone, startPermutation, endPermutation, results);
+	}
+
+	function simulateLoop(aiPlayers: EuchreAI[], deck: Card[], playerHand: Card[],
+		trumpCandidate: Card, dealer: Player, orderItUp: boolean,
+		discard: Card | undefined, suitToCall: Suit | null, goAlone: boolean,
+		startPermutation: string[], endPermutation: string | undefined,
+		results: Results) {
+		let permutation: string[] = startPermutation;
+		while (nextPermutation(permutation)) {
+			let playerHands = deal(deck, playerHand, permutation);
+			simulateHand(playerHands, aiPlayers, dealer, trumpCandidate, results);
+			i++;
+			if (endPermutation && permutation.join("") === endPermutation) {
+				break;
+			} else if (i % 1e4 === 0) {
+				setTimeout(simulateLoop, 0, aiPlayers, deck, playerHand,
+					trumpCandidate, dealer, orderItUp, discard, suitToCall, goAlone,
+					permutation, endPermutation, results);
+				return;
+			}
+		}
+		let message: ResultsResponse = {
+			type: "results",
+			workerId: workerId,
+			results: results,
+		}
+		postMessage(message);
+		close();
+	}
+
+	function simulateHand(playerHands: Card[][], aiPlayers: EuchreAI[], dealer: Player,
+		trumpCandidate: Card, results: Results): void {
+		let hand = new Hand(dealer, aiPlayers, playerHands, trumpCandidate);
+		hand.doHand();
+		let points = hand.nsPointsWon() - hand.ewPointsWon();
+		if (points > 0) {
+			results.won++;
+		} else {
+			results.lost++;
+		}
+		results.pointValues[points]++;
+	}
+
+	function startSimulation(data: StartParams) {
+		workerId = data.workerId;
+
+		let baseURL: string = data.baseURL;
 		importScripts(baseURL + 'GameScript/xor4096.js');
 		importScripts(baseURL + 'GameScript/globs.js');
 		importScripts(baseURL + 'GameScript/utils.js');
@@ -32,56 +142,17 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		importScripts(baseURL + 'AIScript/DoesNotBidAI.js');
 		importScripts(baseURL + 'AIScript/MultiAI.js');
 		importScripts(baseURL + 'AIScript/KevinAI.js');
+		importScripts(baseURL + 'SimulationScript/simulateHand.js');
 
-		simulate(deck, hand, trumpCandidate, dealer, orderItUp, discard,
-			suitToCall, goAlone, startPermutation, endPermutation);
-	}
+		let startPermutationString = data.startPermutation;
+		let startPermutation: string[] = [];
+		if (startPermutationString) {
+			startPermutation = startPermutationString.split("");
+		}
 
-	function simulate(deck: Card[], playerHand: Card[], trumpCandidate: Card,
-		dealer: Player, orderItUp: boolean, discard: Card | null,
-		suitToCall: Suit | null, goAlone: boolean,
-		startPermutation: string[], endPermutation: string | undefined): void {
-		let permutation: string[] = startPermutation;
-		let bidderAI = new BiddingTestAI(orderItUp, suitToCall, goAlone, discard || undefined);
-		let aiPlayers = [
-			new MultiAI(bidderAI, new KevinAI()),
-			new MultiAI(new DoesNotBidAI(), new KevinAI()),
-			new MultiAI(new DoesNotBidAI(), new KevinAI()),
-			new MultiAI(new DoesNotBidAI(), new KevinAI()),
-		];
-		let results: { [index: string]: number } = {
-			"true": 0,
-			"false": 0,
-			"-2": 0,
-			"1": 0,
-		};
-		if (goAlone) {
-			results["4"] = 0;
-		} else {
-			results["2"] = 0;
-		}
-		let i = 0;
-		let startTime = performance.now();
-		let cycleTime = startTime;
-		while (nextPermutation(permutation)) {
-			let playerHands = deal(deck, playerHand, permutation);
-			let hand = new Hand(dealer, aiPlayers, playerHands, trumpCandidate);
-			hand.doHand();
-			let points = hand.nsPointsWon() - hand.ewPointsWon();
-			let wonHand = points > 0;
-			results[wonHand.toString()]++;
-			results[points.toString()]++;
-			i++;
-			if (performance.now() - cycleTime >= 10000) {
-				postMessage(["progress", i]);
-				cycleTime = performance.now();
-			}
-			if (endPermutation && permutation.join("") === endPermutation) {
-				break;
-			}
-		}
-		postMessage(["result", results]);
-		close();
+		simulate(data.deck, data.hand, data.trumpCandidate, data.dealer,
+			data.orderItUp, data.discard || undefined, data.suitToCall, data.goAlone,
+			startPermutation, data.endPermutation);
 	}
 
 	function deal(deck: Card[], hand: Card[], permutation: string[]): Card[][] {

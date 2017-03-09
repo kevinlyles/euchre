@@ -247,40 +247,55 @@ function buildDeck(hand: Card[], trumpCandidate: Card): Card[] {
 	return deck;
 }
 
-/*function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player.South, orderItUp: true, discard: Card, suitToCall: null, goAlone: boolean): void
-function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player.North | Player.East | Player.West, orderItUp: true, discard: null, suitToCall: null, goAlone: boolean): void
-function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player, orderItUp: false, discard: null, suitToCall: Suit, goAlone: boolean): void
-function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player, orderItUp: false, discard: null, suitToCall: null, goAlone: false): void*/
+let startTime: number;
+let totalCount: number[] = [];
+let totalResults: Results[] = [];
+let workers: Worker[];
+let intervalHandle: number;
+
 function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player,
 	orderItUp: boolean, discard: Card | null, suitToCall: Suit | null,
 	goAlone: boolean, numberOfThreads: number = 1): void {
 	let deck = buildDeck(hand, trumpCandidate);
 
-	var workerAsString = "(" + simulateHand_worker.toString() + ")()";
-	var blob = new Blob([workerAsString], { type: 'text/javascript' });
+	let workerAsString = "(" + simulateHand_worker.toString() + ")()";
+	let blob = new Blob([workerAsString], { type: 'text/javascript' });
 	startTime = performance.now();
-	threadNumber = 0;
 	let url = document.location.href;
 	let index = url.lastIndexOf("/");
 	url = url.substring(0, index + 1);
+	workers = [];
 
-	//TODO: switch this from the workers checking each time to a timer?
 	for (let i = 0; i < numberOfThreads; i++) {
-		var worker = new Worker(URL.createObjectURL(blob));
-		worker.onmessage = handleMessage(numberOfThreads);
-		worker.postMessage([
-			deck,
-			hand,
-			trumpCandidate,
-			dealer,
-			orderItUp,
-			discard,
-			suitToCall,
-			goAlone,
-			url,
-			breakPoints[numberOfThreads][threadNumber - 1],
-			breakPoints[numberOfThreads][threadNumber],
-		]);
+		let worker = new Worker(URL.createObjectURL(blob));
+		worker.onmessage = handleMessage;
+		let message: StartRequest = {
+			type: "start",
+			data: {
+				workerId: i,
+				deck,
+				hand,
+				trumpCandidate,
+				dealer,
+				orderItUp,
+				discard,
+				suitToCall,
+				goAlone,
+				baseURL: url,
+				startPermutation: breakPoints[numberOfThreads][i - 1],
+				endPermutation: breakPoints[numberOfThreads][i],
+			},
+		}
+		worker.postMessage(message);
+		workers[i] = worker;
+	}
+	intervalHandle = setInterval(checkProgress, 10000);
+}
+
+function checkProgress(): void {
+	let message: ProgressRequest = { type: "progress" };
+	for (let worker of workers) {
+		worker.postMessage(message);
 	}
 }
 
@@ -303,20 +318,14 @@ const breakPoints: { [index: number]: string[] } = {
 	16: ["EEWWNENKWWENWKEKNN", "ENENNENEWEWWNKKWWK", "ENWNWEKENWEWNWEKKN", "EWNNWNWEKKEENNEKWW", "KEWEKKNEEENNNNWWWW", "KNNNNNWEEEEEKKWWWW", "KWWKNWNEKEWNEWEENN", "NENWWNNEWKKNEKEEWW", "NKWENKEEWWENKWENNW", "NNWEWEEKKNKNNWEEWW", "NWNEWNKNEWENWEEKKW", "WEKNEWNENWWWEKEKNN", "WKENNENWEKNWEKENWW", "WNEWKWNWKEEKNWNENE", "WWEENKENWNKNENEKWW"],
 };
 
-let startTime: number;
-let threadNumber: number;
-let totalCount: number[] = [];
-let totalResults: { [index: string]: number }[] = [];
+function handleMessage(message: MessageEvent): void {
+	let data: Response = message.data;
+	switch (data.type) {
 
-function handleMessage(numberOfThreads: number): (message: MessageEvent) => void {
-	let thread = threadNumber;
-	let handler = function (message: MessageEvent) {
-		let data: any[] = message.data;
-		if (data[0] === "progress") {
-			let count: number = data[1];
-			totalCount[thread] = count;
-			count = 0;
-			for (let i = 0; i < numberOfThreads; i++) {
+		case "progress":
+			totalCount[data.workerId] = data.numberProcessed;
+			let count = 0;
+			for (let i = 0; i < workers.length; i++) {
 				if (!totalCount[i]) {
 					return;
 				}
@@ -325,46 +334,59 @@ function handleMessage(numberOfThreads: number): (message: MessageEvent) => void
 			let timeString = formatTime((performance.now() - startTime) / 1000);
 			updateLog(`${formatCount(count)}: ${timeString}<br/>`);
 			totalCount = [];
-		} else if (data[0] === "result") {
-			let result: { [index: string]: number } = data[1];
-			totalResults[thread] = result;
-			result = {};
-			for (let i = 0; i < numberOfThreads; i++) {
+			break;
+		case "results":
+			totalResults[data.workerId] = data.results;
+			let results = createBlankResults();
+			for (let i = 0; i < workers.length; i++) {
 				if (!totalResults[i]) {
 					return;
 				}
-				for (let j in totalResults[i]) {
-					if (result[j] === undefined) {
-						result[j] = totalResults[i][j]
-					} else {
-						result[j] += totalResults[i][j];
-					}
+				results.won += totalResults[i].won;
+				results.lost += totalResults[i].lost;
+				for (let j of POINT_VALUES) {
+					results.pointValues[j] += totalResults[i].pointValues[j];
 				}
 			}
-			updateLog(`<h4>Results:</h4>`);
-			updateLog(`Wins: ${formatCount(result["true"])}<br/>`);
-			updateLog(`Losses: ${formatCount(result["false"])}<br/>`);
-			let expectedPointGain = 0;
-			let count = 0;
-			for (let i in result) {
-				if (i === "true" || i === "false") {
-					continue;
-				}
-				let pointChange = parseInt(i);
-				let resultCount = result[i];
-				let changeString = pointChange > 0 ? "Gained " + pointChange : "Lost " + -pointChange;
-				updateLog(`${changeString} points: ${formatCount(resultCount)}<br/>`);
-				count += resultCount;
-				expectedPointGain += pointChange * resultCount;
-			}
-			expectedPointGain /= count;
-			updateLog(`Expected point gain: ${expectedPointGain.toFixed(2)}<br/>`);
-			let timeString = formatTime((performance.now() - startTime) / 1000);
-			updateLog(`Total time: ${timeString}<br/>`);
-		}
+			clearInterval(intervalHandle);
+			displayResults(results);
+			break;
 	}
-	threadNumber++;
-	return handler;
+}
+
+const POINT_VALUES = [-2, 1, 2, 4];
+function createBlankResults(): Results {
+	let results: Results = {
+		won: 0,
+		lost: 0,
+		pointValues: {},
+	};
+	for (let i of POINT_VALUES) {
+		results.pointValues[i] = 0;
+	}
+	return results;
+}
+
+
+
+function displayResults(results: Results): void {
+	updateLog(`<h4>Results:</h4>`);
+	updateLog(`Wins: ${formatCount(results.won)}<br/>`);
+	updateLog(`Losses: ${formatCount(results.lost)}<br/>`);
+	let expectedPointGain = 0;
+	let count = 0;
+	for (let pointChange of POINT_VALUES) {
+		let resultCount = results.pointValues[pointChange];
+		let changeString = pointChange > 0 ? "Gained " + pointChange : "Lost " + -pointChange;
+		updateLog(`${changeString} points: ${formatCount(resultCount)}<br/>`);
+		count += resultCount;
+		expectedPointGain += pointChange * resultCount;
+	}
+	expectedPointGain /= count;
+	updateLog(`Expected point gain: ${expectedPointGain.toFixed(2)}<br/>`);
+	let timeString = formatTime((performance.now() - startTime) / 1000);
+	updateLog(`Total time: ${timeString}<br/>`);
+
 }
 
 function formatCount(count: number): string {
