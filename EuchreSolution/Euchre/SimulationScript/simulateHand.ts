@@ -359,6 +359,10 @@ function handleMessage(message: MessageEvent): void {
 			}
 			clearInterval(intervalHandle);
 			displayResults(results);
+			const stopMessage: StopRequest = { type: "stop" };
+			for (const worker of workers) {
+				worker.postMessage(stopMessage);
+			}
 			break;
 	}
 }
