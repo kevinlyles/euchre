@@ -13,6 +13,12 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		const suitToCall: Suit | null = data[i++];
 		const goAlone: boolean = data[i++];
 		const baseURL: string = data[i++];
+		const startPermutationString: string | undefined = data[i++];
+		let startPermutation: string[] = [];
+		if (startPermutationString) {
+			startPermutation = startPermutationString.split("");
+		}
+		const endPermutation: string | undefined = data[i++];
 
 		importScripts(baseURL + "GameScript/xor4096.js");
 		importScripts(baseURL + "GameScript/globs.js");
@@ -28,13 +34,14 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		importScripts(baseURL + "AIScript/KevinAI.js");
 
 		simulate(deck, hand, trumpCandidate, dealer, orderItUp, discard,
-			suitToCall, goAlone);
+			suitToCall, goAlone, startPermutation, endPermutation);
 	};
 
 	function simulate(deck: Card[], playerHand: Card[], trumpCandidate: Card,
 		dealer: Player, orderItUp: boolean, discard: Card | null,
-		suitToCall: Suit | null, goAlone: boolean): void {
-		const permutation: string[] = [];
+		suitToCall: Suit | null, goAlone: boolean,
+		startPermutation: string[], endPermutation: string | undefined): void {
+		const permutation: string[] = startPermutation;
 		const bidderAI = new BiddingTestAI(orderItUp, suitToCall, goAlone, discard || undefined);
 		const aiPlayers = [
 			new MultiAI(bidderAI, new KevinAI()),
@@ -81,13 +88,16 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 				postMessage(["progress", i]);
 				cycleTime = performance.now();
 			}
+			if (endPermutation && permutation.join("") === endPermutation) {
+				break;
+			}
 		}
 		postMessage(["result", results]);
 		close();
 	}
 
 	function deal(deck: Card[], hand: Card[], permutation: string[]): Card[][] {
-		const playerHands = [hand, [], [], []];
+		const playerHands = [hand.slice(), [], [], []];
 		const pushTo: { [index: string]: Card[] } = {
 			E: playerHands[Player.East],
 			K: [],
@@ -106,9 +116,6 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 				lastPermutation.push(character);
 			}
 			return true;
-		}
-		if (lastPermutation[3] === "K") {
-			return false;
 		}
 		let i = lastPermutation.length - 1;
 		let j = i;
