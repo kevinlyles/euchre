@@ -350,6 +350,10 @@ function handleMessage(message: MessageEvent): void {
 			}
 			clearInterval(intervalHandle);
 			displayResults(results);
+			let message: StopRequest = { type: "stop" };
+			for (let worker of workers) {
+				worker.postMessage(message);
+			}
 			break;
 	}
 }

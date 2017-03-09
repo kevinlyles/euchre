@@ -22,9 +22,13 @@ type StartRequest = {
 
 type ProgressRequest = {
 	type: "progress",
-}
+};
 
-type Request = StartRequest | ProgressRequest;
+type StopRequest = {
+	type: "stop",
+};
+
+type Request = StartRequest | ProgressRequest | StopRequest;
 
 type Results = {
 	won: number,
@@ -64,6 +68,9 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 					numberProcessed: i,
 				};
 				postMessage(message);
+				break;
+			case "stop":
+				close();
 				break;
 		}
 	}
@@ -110,7 +117,6 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 			results: results,
 		}
 		postMessage(message);
-		close();
 	}
 
 	function simulateHand(playerHands: Card[][], aiPlayers: EuchreAI[], dealer: Player,
