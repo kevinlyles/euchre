@@ -1,4 +1,16 @@
-//returns: [trump, alonePlayer, maker, bidRound]
+enum BidStage {
+	Round1,
+	Round2,
+	Finished,
+}
+
+interface BidResult {
+	trump: Suit;
+	maker: Player;
+	alone: boolean;
+	stage: BidStage;
+}
+
 class Bid {
 	private __playerHands: Card[][]; //2d array of everyone's hands
 	private __dealer: Player;
