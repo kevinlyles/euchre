@@ -141,6 +141,11 @@ class Hand {
 			if (trumpCandidate.rank === Rank.Jack) {
 				jacks[trumpCandidate.suit] = trumpCandidate;
 			}
+			for (let suit of suitsArray) {
+				if (!jacks[suit]) {
+					jacks[suit] = new Card(suit, Rank.Jack);
+				}
+			}
 		} else {
 			const { deck, jacks: shuffledJacks } = getShuffledDeck();
 			jacks = shuffledJacks;

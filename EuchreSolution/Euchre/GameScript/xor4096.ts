@@ -102,7 +102,10 @@ let rng: XorGen;
 	if (!seed.join) {
 		seed.join = Array.prototype.join;
 	}
-	const cryptoObj = window.crypto || ((window as any).msCrypto as Crypto);
+	let cryptoObj: Crypto | null = null;
+	if (typeof window !== "undefined") {
+		cryptoObj = window.crypto || ((window as any).msCrypto as Crypto);
+	}
 	if (cryptoObj && cryptoObj.getRandomValues) {
 		cryptoObj.getRandomValues(seed);
 	} else {
