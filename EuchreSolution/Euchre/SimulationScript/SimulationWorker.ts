@@ -137,8 +137,8 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 
 		let baseURL: string = data.baseURL;
 		importScripts(baseURL + 'GameScript/xor4096.js');
+		importScripts(baseURL + 'GameScript/card.js');
 		importScripts(baseURL + 'GameScript/globs.js');
-		importScripts(baseURL + 'GameScript/utils.js');
 		importScripts(baseURL + 'GameScript/playerAPI.js');
 		importScripts(baseURL + 'GameScript/animation.js');
 		importScripts(baseURL + 'GameScript/bid.js');

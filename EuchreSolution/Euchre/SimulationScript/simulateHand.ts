@@ -395,7 +395,7 @@ function displayResults(results: Results): void {
 
 function formatCount(count: number): string {
 	let percent = count / 617512896 * 100; // 617512896 = C(18,5) * C(13, 5) * C(8, 5)
-	let percentString = percent.toFixed(4 - percent.toFixed(0).length);
+	let percentString = percent.toFixed(7 - percent.toFixed(3).length);
 	let suffix = "";
 	if (count > 1e6) {
 		count /= 1e6;

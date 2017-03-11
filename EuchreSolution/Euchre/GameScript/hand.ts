@@ -106,6 +106,8 @@ class Hand {
 	}
 
 	/* constructor */
+	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[]);
+	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[], playerHands: Card[][], trumpCandidate: Card);
 	constructor(dealer: Player, aiPlayers: (EuchreAI | null)[], playerHands?: Card[][], trumpCandidate?: Card) {
 		this.__dealer = dealer;
 		this.__aiPlayers = aiPlayers;
@@ -125,6 +127,11 @@ class Hand {
 			this.__trumpCandidate = trumpCandidate
 			if (trumpCandidate.rank === Rank.Jack) {
 				jacks[trumpCandidate.suit] = trumpCandidate;
+			}
+			for (let suit of suitsArray) {
+				if (!jacks[suit]) {
+					jacks[suit] = new Card(suit, Rank.Jack);
+				}
 			}
 		} else {
 			let {deck, jacks: shuffledJacks} = getShuffledDeck();
