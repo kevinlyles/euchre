@@ -70,7 +70,6 @@ class Hand {
 	//Playing related
 	private __trick: Trick;
 	private __numTricksPlayed = 0;
-	//private __numPlayers = 4; //players playing this hand; this is usually 4 but can be 3 or 2 depending on loners
 	private __nsTricksWon = 0;
 	private __ewTricksWon = 0;
 	private __nsPointsWon = 0;
