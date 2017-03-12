@@ -118,7 +118,7 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		];
 		const results = createBlankResults();
 		simulationCount = 0;
-		simulateLoop(aiPlayers, deck, playerHand, trumpCandidate, dealer, orderItUp,
+		setTimeout(simulateLoop, 0, aiPlayers, deck, playerHand, trumpCandidate, dealer, orderItUp,
 			discard, suitToCall, goAlone, startPermutation, segmentNumber, results);
 	}
 
