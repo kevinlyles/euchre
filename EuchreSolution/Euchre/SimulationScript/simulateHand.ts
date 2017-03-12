@@ -255,6 +255,17 @@ let workers: Worker[];
 let intervalHandle: number;
 let segmentNumber: number;
 let dataTemplate: SimulateParamsTemplate;
+let precalcPermutations: string[] = [];
+
+function calculateMorePermutations() {
+	const length = precalcPermutations.length;
+	let precalcSegmentNumber = segmentNumber + length;
+	for (let i = precalcPermutations.length; i < 16; i++) {
+		precalcPermutations.push(getNthPermutation(DEAL_SET, precalcSegmentNumber));
+		precalcSegmentNumber++;
+	}
+}
+setTimeout(calculateMorePermutations, 0);
 
 function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player,
 	orderItUp: boolean, discard: Card | null, suitToCall: Suit | null,
@@ -297,11 +308,18 @@ function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player,
 
 function startSimulatingChunk(workerId: number): void {
 	const data: SimulateParams = dataTemplate as SimulateParams;
-	data.startPermutation = getNthPermutation(DEAL_SET.slice(), segmentNumber * SEGMENT_SIZE);
+	let permutation = precalcPermutations.shift();
+	if (!permutation) {
+		permutation = getNthPermutation(DEAL_SET.slice(), segmentNumber * SEGMENT_SIZE);
+	}
+	data.startPermutation = permutation;
 	data.segmentNumber = segmentNumber;
 	const message: SimulateRequest = { type: "simulate", data };
 	workers[workerId].postMessage(message);
 	segmentNumber++;
+	if (precalcPermutations.length < 8) {
+		setTimeout(calculateMorePermutations, 0);
+	}
 }
 
 function checkProgress(): void {
