@@ -1,7 +1,6 @@
 declare function postMessage(message: SimulationResponse): void;  //Workaround so TypeScript compiles
 
-interface StartParams {
-	workerId: number;
+interface SimulateParamsTemplate {
 	deck: Card[];
 	hand: Card[];
 	trumpCandidate: Card;
@@ -10,14 +9,22 @@ interface StartParams {
 	discard: Card | null;
 	suitToCall: Suit | null;
 	goAlone: boolean;
-	baseURL: string;
-	startPermutation?: string;
-	endPermutation?: string;
+}
+
+interface SimulateParams extends SimulateParamsTemplate {
+	segmentNumber: number;
+	startPermutation: string;
 }
 
 interface StartRequest {
 	type: "start";
-	data: StartParams;
+	baseURL: string;
+	workerId: number;
+}
+
+interface SimulateRequest {
+	type: "simulate";
+	data: SimulateParams;
 }
 
 interface ProgressRequest {
@@ -28,7 +35,7 @@ interface StopRequest {
 	type: "stop";
 }
 
-type SimulationRequest = StartRequest | ProgressRequest | StopRequest;
+type SimulationRequest = StartRequest | SimulateRequest | ProgressRequest | StopRequest;
 
 interface Results {
 	won: number;
@@ -45,6 +52,7 @@ interface ProgressResponse {
 interface ResultsResponse {
 	type: "results";
 	workerId: number;
+	segmentNumber: number;
 	results: Results;
 }
 
@@ -59,6 +67,9 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 
 		switch (data.type) {
 			case "start":
+				setup(data);
+				break;
+			case "simulate":
 				startSimulation(data.data);
 				break;
 			case "progress":
@@ -75,10 +86,29 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		}
 	};
 
+	function setup(data: StartRequest) {
+		workerId = data.workerId;
+
+		const baseURL = data.baseURL;
+		importScripts(baseURL + "GameScript/xor4096.js");
+		importScripts(baseURL + "GameScript/card.js");
+		importScripts(baseURL + "GameScript/globs.js");
+		importScripts(baseURL + "GameScript/playerAPI.js");
+		importScripts(baseURL + "GameScript/animation.js");
+		importScripts(baseURL + "GameScript/bid.js");
+		importScripts(baseURL + "GameScript/trick.js");
+		importScripts(baseURL + "GameScript/hand.js");
+		importScripts(baseURL + "AIScript/BiddingTestAI.js");
+		importScripts(baseURL + "AIScript/DoesNotBidAI.js");
+		importScripts(baseURL + "AIScript/MultiAI.js");
+		importScripts(baseURL + "AIScript/KevinAI.js");
+		importScripts(baseURL + "SimulationScript/simulateHand.js");
+	}
+
 	function simulate(deck: Card[], playerHand: Card[], trumpCandidate: Card,
 		dealer: Player, orderItUp: boolean, discard: Card | undefined,
 		suitToCall: Suit | null, goAlone: boolean,
-		startPermutation: string[], endPermutation: string | undefined): void {
+		startPermutation: string[], segmentNumber: number): void {
 		const bidderAI = new BiddingTestAI(orderItUp, suitToCall, goAlone, discard);
 		const aiPlayers = [
 			new MultiAI(bidderAI, new KevinAI()),
@@ -89,25 +119,24 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		const results = createBlankResults();
 		simulationCount = 0;
 		simulateLoop(aiPlayers, deck, playerHand, trumpCandidate, dealer, orderItUp,
-			discard, suitToCall, goAlone, startPermutation, endPermutation, results);
+			discard, suitToCall, goAlone, startPermutation, segmentNumber, results);
 	}
 
 	function simulateLoop(aiPlayers: EuchreAI[], deck: Card[], playerHand: Card[],
 		trumpCandidate: Card, dealer: Player, orderItUp: boolean,
 		discard: Card | undefined, suitToCall: Suit | null, goAlone: boolean,
-		startPermutation: string[], endPermutation: string | undefined,
-		results: Results) {
+		startPermutation: string[], segmentNumber: number, results: Results) {
 		const permutation: string[] = startPermutation;
 		while (nextPermutation(permutation)) {
 			const playerHands = deal(deck, playerHand, permutation);
 			simulateHand(playerHands, aiPlayers, dealer, trumpCandidate, results);
 			simulationCount++;
-			if (endPermutation && permutation.join("") === endPermutation) {
+			if (simulationCount === SEGMENT_SIZE - 1) {
 				break;
-			} else if (simulationCount % 1e4 === 0) {
+			} else if (simulationCount % (SEGMENT_SIZE / 16) === 0) {
 				setTimeout(simulateLoop, 0, aiPlayers, deck, playerHand,
 					trumpCandidate, dealer, orderItUp, discard, suitToCall, goAlone,
-					permutation, endPermutation, results);
+					permutation, segmentNumber, results);
 				return;
 			}
 		}
@@ -115,6 +144,7 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 			type: "results",
 			workerId,
 			results,
+			segmentNumber,
 		};
 		postMessage(message);
 	}
@@ -144,24 +174,7 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 		results.pointValues[points]++;
 	}
 
-	function startSimulation(data: StartParams) {
-		workerId = data.workerId;
-
-		const baseURL: string = data.baseURL;
-		importScripts(baseURL + "GameScript/xor4096.js");
-		importScripts(baseURL + "GameScript/card.js");
-		importScripts(baseURL + "GameScript/globs.js");
-		importScripts(baseURL + "GameScript/playerAPI.js");
-		importScripts(baseURL + "GameScript/animation.js");
-		importScripts(baseURL + "GameScript/bid.js");
-		importScripts(baseURL + "GameScript/trick.js");
-		importScripts(baseURL + "GameScript/hand.js");
-		importScripts(baseURL + "AIScript/BiddingTestAI.js");
-		importScripts(baseURL + "AIScript/DoesNotBidAI.js");
-		importScripts(baseURL + "AIScript/MultiAI.js");
-		importScripts(baseURL + "AIScript/KevinAI.js");
-		importScripts(baseURL + "SimulationScript/simulateHand.js");
-
+	function startSimulation(data: SimulateParams) {
 		const startPermutationString = data.startPermutation;
 		let startPermutation: string[] = [];
 		if (startPermutationString) {
@@ -170,7 +183,7 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 
 		simulate(data.deck, data.hand, data.trumpCandidate, data.dealer,
 			data.orderItUp, data.discard || undefined, data.suitToCall, data.goAlone,
-			startPermutation, data.endPermutation);
+			startPermutation, data.segmentNumber);
 	}
 
 	function deal(deck: Card[], hand: Card[], permutation: string[]): Card[][] {
@@ -189,7 +202,7 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 
 	function nextPermutation(lastPermutation: string[]): boolean {
 		if (lastPermutation.length === 0) {
-			for (const character of "EEEEEKKKNNNNNWWWWW".split("")) {
+			for (const character of DEAL_SET) {
 				lastPermutation.push(character);
 			}
 			return true;
