@@ -249,9 +249,12 @@ function buildDeck(hand: Card[], trumpCandidate: Card): Card[] {
 
 let startTime: number;
 let totalCount: number[] = [];
-let totalResults: Results[] = [];
+let totalResults: Results;
+let hasResults: boolean[] = [];
 let workers: Worker[];
 let intervalHandle: number;
+let segmentNumber: number;
+let dataTemplate: SimulateParamsTemplate;
 
 function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player,
 	orderItUp: boolean, discard: Card | null, suitToCall: Suit | null,
@@ -262,61 +265,122 @@ function startWorkers(hand: Card[], trumpCandidate: Card, dealer: Player,
 	let blob = new Blob([workerAsString], { type: 'text/javascript' });
 	startTime = performance.now();
 	let url = document.location.href;
-	let index = url.lastIndexOf("/");
-	url = url.substring(0, index + 1);
+	url = url.substring(0, url.lastIndexOf("/") + 1);
 	workers = [];
+	segmentNumber = 0;
+	totalResults = createBlankResults();
+	dataTemplate = {
+		deck,
+		hand,
+		trumpCandidate,
+		dealer,
+		orderItUp,
+		discard,
+		suitToCall,
+		goAlone,
+	};
 
 	for (let i = 0; i < numberOfThreads; i++) {
 		let worker = new Worker(URL.createObjectURL(blob));
 		worker.onmessage = handleMessage;
+		workers[i] = worker;
 		let message: StartRequest = {
 			type: "start",
-			data: {
-				workerId: i,
-				deck,
-				hand,
-				trumpCandidate,
-				dealer,
-				orderItUp,
-				discard,
-				suitToCall,
-				goAlone,
-				baseURL: url,
-				startPermutation: breakPoints[numberOfThreads][i - 1],
-				endPermutation: breakPoints[numberOfThreads][i],
-			},
-		}
+			workerId: i,
+			baseURL: url,
+		};
 		worker.postMessage(message);
-		workers[i] = worker;
+		startSimulatingChunk(i);
 	}
 	intervalHandle = setInterval(checkProgress, 10000);
 }
 
+function startSimulatingChunk(workerId: number): void {
+	let data: SimulateParams = dataTemplate as SimulateParams;
+	data.startPermutation = getNthPermutation(DEAL_SET.slice(), segmentNumber * SEGMENT_SIZE);
+	data.segmentNumber = segmentNumber;
+	let message: SimulateRequest = { type: "simulate", data: data, };
+	workers[workerId].postMessage(message);
+	segmentNumber++;
+}
+
 function checkProgress(): void {
+	totalCount = [];
 	let message: ProgressRequest = { type: "progress" };
 	for (let worker of workers) {
 		worker.postMessage(message);
 	}
 }
 
-const breakPoints: { [index: number]: string[] } = {
-	1: [],
-	2: ["NENWWNNEWKKNEKEEWW"],
-	3: ["KKKNEEEEENNNNWWWWW", "NWKEENENKWNKWWEENW"],
-	4: ["EWNNWNWEKKEENNEKWW", "NENWWNNEWKKNEKEEWW", "WEKNEWNENWWWEKEKNN"],
-	5: ["EWEEWWKWNENNWKKNEN", "KWEKEWNKWNNNEEEWWN", "NNKKENWKWEEWWNWENE", "WEWWEENNEEKNNKWWNK"],
-	6: ["ENNWKNWWEENWKNEEKW", "KKKNEEEEENNNNWWWWW", "NENWWNNEWKKNEKEEWW", "NWKEENENKWNKWWEENW", "WKNNENKNNWKEWEWEWE"],
-	7: ["ENKNNEWENWWNEWEKKW", "KEENWWNENWWWEKEKNN", "KWNWEKEEWNNNNWEEKW", "NKWWEEWENENKKNENWW", "NWWNEWENKKEWEWNEKN", "WNEENNWNENWEWEKWKK"],
-	8: ["ENENNENEWEWWNKKWWK", "EWNNWNWEKKEENNEKWW", "KNNNNNWEEEEEKKWWWW", "NENWWNNEWKKNEKEEWW", "NNWEWEEKKNKNNWEEWW", "WEKNEWNENWWWEKEKNN", "WNEWKWNWKEEKNWNENE"],
-	9: ["EKWWENWKEENNWWNEKN", "EWKKWEWWNEKNENNWNE", "KKKNEEEEENNNNWWWWW", "NEEEEEKKKNNNNWWWWW", "NKNNWWENEKWEEKEWWN", "NWKEENENKWNKWWEENW", "WENWENKKEENWWNKNEW", "WNKNWEWEKENEWENNWK"],
-	10: ["EKWEKENNWNENNEKWWW", "EWEEWWKWNENNWKKNEN", "KENEWWNENEKEWWWNNK", "KWEKEWNKWNNNEEEWWN", "NENWWNNEWKKNEKEEWW", "NNKKENWKWEEWWNWENE", "NWNWNKEWEKWEWEENKN", "WEWWEENNEEKNNKWWNK", "WNNEWNNKKEWKEEWWEN"],
-	11: ["EKNNEWWENNEWNKEKWW", "ENWKWNEWWEENKNWEKN", "EWWNWKEKNNWEENEWKN", "KNKEWWNEEENWNEWNKW", "NEENKWENEWNWKNEKWW", "NKKNWWKWENEEWEWNEN", "NNWWENKWENNKKWEEEW", "WEEKKEWEENWNKWNNNW", "WKEWNWKNNWNEKEENWE", "WNNWEENENKENWKWKEW"],
-	12: ["EKKWWEWWNEKNENNWNE", "ENNWKNWWEENWKNEEKW", "EWNNWNWEKKEENNEKWW", "KKKNEEEEENNNNWWWWW", "KWKWWKNEEEEENNNNWW", "NENWWNNEWKKNEKEEWW", "NNEKWEEWNWKKNEENWW", "NWKEENENKWNKWWEENW", "WEKNEWNENWWWEKEKNN", "WKNNENKNNWKEWEWEWE", "WNWEKKEWENENWKENNW"],
-	13: ["EKEWWNEKNEKWNWNEWN", "ENNEWENKNKWWEWWEKN", "EWKWNWKWEEWENNKENN", "KENWEWNWKENNNWEEKW", "KNWEWNKNENWEKWNEEW", "NEEWNKEWWWKNWENEKN", "NKEWKWNNNWNKEEWEEW", "NNNNNWEEEEEKKKWWWW", "NWNNEEEKWKEWENWKNW", "WENKWNEWNNEEKWWEKN", "WKWKWENNWEKNEWEENN", "WNWKNEEEKKNWNWEENW"],
-	14: ["EKENNNKEWNWEWNEKWW", "ENKNNEWENWWNEWEKKW", "EWEWNKWWNNWNKEEKEN", "KEENWWNENWWWEKEKNN", "KNEWEKWNNEKNNWEEWW", "KWNWEKEEWNNNNWEEKW", "NENWWNNEWKKNEKEEWW", "NKWWEEWENENKKNENWW", "NWEEKNWEKWNKNEENWW", "NWWNEWENKKEWEWNEKN", "WEWEKWNKNENNNWEEKW", "WNEENNWNENWEWEKWKK", "WNWNNEWEKEKEWENNWK"],
-	15: ["EKEENWKKNNWNENEWWW", "ENEWWKEKKNWNWNWNEE", "EWEEWWKWNENNWKKNEN", "EWWKWNNNNWKEKWEEEN", "KKKNEEEEENNNNWWWWW", "KWEKEWNKWNNNEEEWWN", "NEKENKNEWNWWENKWWE", "NKENEWWKENNEKNWEWW", "NNKKENWKWEEWWNWENE", "NWKEENENKWNKWWEENW", "WEENNEEKWNNWNKWKEW", "WEWWEENNEEKNNKWWNK", "WNENEWWEKNKWENNEWK", "WNWWNEWWEKKNENKEEN"],
-	16: ["EEWWNENKWWENWKEKNN", "ENENNENEWEWWNKKWWK", "ENWNWEKENWEWNWEKKN", "EWNNWNWEKKEENNEKWW", "KEWEKKNEEENNNNWWWW", "KNNNNNWEEEEEKKWWWW", "KWWKNWNEKEWNEWEENN", "NENWWNNEWKKNEKEEWW", "NKWENKEEWWENKWENNW", "NNWEWEEKKNKNNWEEWW", "NWNEWNKNEWENWEEKKW", "WEKNEWNENWWWEKEKNN", "WKENNENWEKNWEKENWW", "WNEWKWNWKEEKNWNENE", "WWEENKENWNKNENEKWW"],
-};
+const DEAL_SET = ["E", "E", "E", "E", "E", "K", "K", "K",
+	"N", "N", "N", "N", "N", "W", "W", "W", "W", "W",];
+const SEGMENT_SIZE = 127008;
+const SEGMENT_COUNT = 4862;
+const TOTAL_HANDS = SEGMENT_SIZE * SEGMENT_COUNT; // 617512896 = C(18, 5) * C(13, 5) * C(8, 5)
+
+function getNthPermutation(set: string[], n: number): string {
+	if (set.length === 0) {
+		return "";
+	}
+	let uniqueCharacters: string[] = [];
+	let counts: { [key: string]: number } = {};
+	for (let character of set) {
+		if (!counts[character]) {
+			counts[character] = 1;
+			uniqueCharacters.push(character);
+		} else {
+			counts[character]++;
+		}
+	}
+	let permutations = 0;
+	for (let i = 0; i < uniqueCharacters.length; i++) {
+		let subset = set.slice();
+		subset.splice(set.indexOf(uniqueCharacters[i]), 1);
+		let subsetPermutations = numberOfPermutations(subset);
+		if (permutations + subsetPermutations > n) {
+			return uniqueCharacters[i] + getNthPermutation(subset, n - permutations);
+		}
+		permutations += subsetPermutations;
+	}
+	return "";
+}
+
+function numberOfPermutations(set: string[]): number {
+	let uniqueCharacters: string[] = [];
+	let counts: { [key: string]: number } = {};
+	for (let character of set) {
+		if (!counts[character]) {
+			counts[character] = 1;
+			uniqueCharacters.push(character);
+		} else {
+			counts[character]++;
+		}
+	}
+	let totalCharacters = set.length;
+	let permutations = 1;
+	for (let i = 0; i < uniqueCharacters.length; i++) {
+		let n = totalCharacters;
+		let k = counts[uniqueCharacters[i]];
+		permutations *= factorial(n, k) / factorial(n - k, 1);
+		totalCharacters -= k;
+	}
+	return permutations;
+}
+
+let factorialCache: number[][] = [];
+function factorial(n: number, k: number): number {
+	if (!factorialCache[n]) {
+		factorialCache[n] = [];
+	}
+	if (!factorialCache[n][k]) {
+		if (n <= k) {
+			factorialCache[n][k] = 1;
+		} else {
+			factorialCache[n][k] = n * factorial(n - 1, k)
+		}
+	}
+	return factorialCache[n][k];
+}
 
 function handleMessage(message: MessageEvent): void {
 	let data: Response = message.data;
@@ -332,29 +396,41 @@ function handleMessage(message: MessageEvent): void {
 				count += totalCount[i];
 			}
 			let timeString = formatTime((performance.now() - startTime) / 1000);
+			for (let i = 0; i < segmentNumber; i++) {
+				if (hasResults[i]) {
+					count += SEGMENT_SIZE;
+				}
+			}
 			updateLog(`${formatCount(count)}: ${timeString}<br/>`);
-			totalCount = [];
 			break;
 		case "results":
-			totalResults[data.workerId] = data.results;
-			let results = createBlankResults();
-			for (let i = 0; i < workers.length; i++) {
-				if (!totalResults[i]) {
+			hasResults[data.segmentNumber] = true;
+			let results = data.results;
+			totalResults.won += results.won;
+			totalResults.lost += results.lost;
+			for (let i of POINT_VALUES) {
+				totalResults.pointValues[i] += results.pointValues[i];
+			}
+			if (segmentNumber < SEGMENT_COUNT) {
+				startSimulatingChunk(data.workerId);
+				return;
+			}
+			for (let i = 0; i < SEGMENT_COUNT; i++) {
+				if (!hasResults[i]) {
 					return;
 				}
-				results.won += totalResults[i].won;
-				results.lost += totalResults[i].lost;
-				for (let j of POINT_VALUES) {
-					results.pointValues[j] += totalResults[i].pointValues[j];
-				}
 			}
-			clearInterval(intervalHandle);
-			displayResults(results);
-			let message: StopRequest = { type: "stop" };
-			for (let worker of workers) {
-				worker.postMessage(message);
-			}
+			done(totalResults);
 			break;
+	}
+}
+
+function done(results: Results): void {
+	clearInterval(intervalHandle);
+	displayResults(results);
+	let message: StopRequest = { type: "stop" };
+	for (let worker of workers) {
+		worker.postMessage(message);
 	}
 }
 
@@ -370,8 +446,6 @@ function createBlankResults(): Results {
 	}
 	return results;
 }
-
-
 
 function displayResults(results: Results): void {
 	updateLog(`<h4>Results:</h4>`);
@@ -394,7 +468,7 @@ function displayResults(results: Results): void {
 }
 
 function formatCount(count: number): string {
-	let percent = count / 617512896 * 100; // 617512896 = C(18,5) * C(13, 5) * C(8, 5)
+	let percent = count / TOTAL_HANDS * 100;
 	let percentString = percent.toFixed(7 - percent.toFixed(3).length);
 	let suffix = "";
 	if (count > 1e6) {
