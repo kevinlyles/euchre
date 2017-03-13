@@ -1,5 +1,3 @@
-//TODO: copy everything before passing to the AIs
-
 enum BidStage {
 	Round1,
 	Discard,
@@ -103,7 +101,7 @@ class Bid {
 		}
 		let hand = this.__playerHands[this.__currentPlayer];
 		let trumpCandidate = this.__trumpCandidate;
-		let orderItUp = aiPlayer.chooseOrderUp(hand.slice(), trumpCandidate, this.__dealer);
+		let orderItUp = aiPlayer.chooseOrderUp(copyHand(hand), new Card(trumpCandidate), this.__dealer);
 		if (!orderItUp || !hasSuit(hand, trumpCandidate.suit)) {
 			return null;
 		}
@@ -115,8 +113,7 @@ class Bid {
 	}
 
 	private pickItUp(dealer: Player, trumpCandidate: Card) {
-		let hand = this.__playerHands[dealer];
-		hand.push(trumpCandidate);
+		this.__playerHands[dealer].push(trumpCandidate);
 	}
 
 	private goAlone(bidInitialResult: BidInitialResult): BidResult {
@@ -124,7 +121,7 @@ class Bid {
 		let aiPlayer = this.__aiPlayers[bidResult.maker];
 		if (aiPlayer) {
 			let hand = this.__playerHands[bidResult.maker];
-			bidResult.alone = aiPlayer.chooseGoAlone(hand, bidResult.trump);
+			bidResult.alone = aiPlayer.chooseGoAlone(copyHand(hand), bidResult.trump);
 		} else {
 			bidResult.alone = false;
 		}
@@ -136,7 +133,7 @@ class Bid {
 		let hand = this.__playerHands[dealer];
 		let discard: Card | null = null;
 		if (aiPlayer) {
-			discard = aiPlayer.pickDiscard(hand, this.__trumpCandidate.suit);
+			discard = aiPlayer.pickDiscard(copyHand(hand), this.__trumpCandidate.suit);
 		}
 		if (!discard || !isInHand(hand, discard)) {
 			discard = hand[0];
@@ -156,7 +153,7 @@ class Bid {
 		}
 		let hand = this.__playerHands[this.__currentPlayer];
 		let trumpCandidate = this.__trumpCandidate
-		let trump = aiPlayer.pickTrump(hand, trumpCandidate);
+		let trump = aiPlayer.pickTrump(copyHand(hand), new Card(trumpCandidate));
 		if (trump === null || trump === trumpCandidate.suit || !hasSuit(hand, trump)) {
 			return null;
 		}
