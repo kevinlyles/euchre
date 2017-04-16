@@ -86,7 +86,12 @@ class Controller {
 		this.__settings.showTrickHistory = (document.getElementById("chkShowHistory") as HTMLInputElement).checked;
 
 		//ai settings
-		this.__settings.aiPlayers = [new KevinAI(), new DecentAI(), new KevinAI(), new DecentAI()];
+		this.__settings.aiPlayers = [
+			new KevinAI(),
+			new KevinAIOld(),
+			new KevinAI(),
+			new KevinAIOld(),
+		];
 		this.__settings.hasHooman = this.__settings.aiPlayers.indexOf(null) > -1;
 
 		//statMode: 4 AIs play against each other
