@@ -232,6 +232,23 @@ class KevinAI implements EuchreAI {
 	// tslint:disable-next-line:no-empty
 	public trickEnd(_playedCardsCallback: () => PlayedCard[]): void { }
 
+	private getThrowawayCard(hand: Card[], trickSuit: Suit, trump: Suit): Card | null {
+		const highestCards: Card[] = [];
+		const suitCounts: number[] = [0, 0, 0, 0];
+
+		for (const card of hand) {
+			if (isTrump(card, trump)) {
+				continue;
+			}
+
+			suitCounts[card.suit]++;
+			if (!highestCards[card.suit] || highestCards[card.suit].rank < card.rank) {
+				highestCards[card.suit] = card;
+			}
+		}
+		return getWorstCardInHand(hand, trickSuit, trump);
+	}
+
 	private evaluateCard(card: Card, trump: Suit,
 		hasTrump: boolean[], hasSuit: boolean[],
 		counts: { trumpCount: number, offAceCount: number, suitCount: number }):
