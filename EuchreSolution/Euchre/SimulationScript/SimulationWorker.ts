@@ -73,15 +73,17 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 				startSimulation(data.data);
 				break;
 			case "progress":
-				const responseMessage: ProgressResponse = {
+				const response: ProgressResponse = {
 					type: "progress",
 					workerId,
 					numberProcessed: simulationCount,
 				};
-				postMessage(responseMessage);
+				postMessage(response);
 				break;
 			case "stop":
 				close();
+				break;
+			default:
 				break;
 		}
 	};

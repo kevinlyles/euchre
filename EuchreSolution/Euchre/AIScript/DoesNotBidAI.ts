@@ -1,5 +1,5 @@
 class DoesNotBidAI implements BiddingAI {
-	// tslint:disable-next-line:no-empty
+	//tslint:disable-next-line:no-empty
 	public init() { }
 
 	public chooseOrderUp() {

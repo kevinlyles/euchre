@@ -116,13 +116,13 @@ function getCard(elementIdBase: string, cardName?: string): Card | null {
 			suit = Suit.Spades;
 			break;
 		default:
-			if (cardName) { alert("Invalid suit for " + cardName.toLocaleLowerCase() + ": " + suitSelect.value); }
+			if (cardName) { alert(`Invalid suit for ${cardName.toLocaleLowerCase()}: "${suitSelect.value}`); }
 			return null;
 	}
 
 	const rank = +rankSelect.value;
 	if (!Rank[rank]) {
-		if (cardName) { alert("Invalid rank for " + cardName.toLocaleLowerCase() + ": " + rankSelect.value); }
+		if (cardName) { alert(`Invalid rank for ${cardName.toLocaleLowerCase()}: ${rankSelect.value}`); }
 		return null;
 	}
 
@@ -350,12 +350,12 @@ function getNthPermutation(set: string[], n: number): string {
 		}
 	}
 	let permutations = 0;
-	for (const uniqueCharacter of uniqueCharacters) {
+	for (const character of uniqueCharacters) {
 		const subset = set.slice();
-		subset.splice(set.indexOf(uniqueCharacter), 1);
+		subset.splice(set.indexOf(character), 1);
 		const subsetPermutations = numberOfPermutations(subset);
 		if (permutations + subsetPermutations > n) {
-			return uniqueCharacter + getNthPermutation(subset, n - permutations);
+			return character + getNthPermutation(subset, n - permutations);
 		}
 		permutations += subsetPermutations;
 	}
@@ -375,9 +375,9 @@ function numberOfPermutations(set: string[]): number {
 	}
 	let totalCharacters = set.length;
 	let permutations = 1;
-	for (const uniqueCharacter of uniqueCharacters) {
+	for (const character of uniqueCharacters) {
 		const n = totalCharacters;
-		const k = counts[uniqueCharacter];
+		const k = counts[character];
 		permutations *= factorial(n, k) / factorial(n - k, 1);
 		totalCharacters -= k;
 	}
