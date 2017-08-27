@@ -154,16 +154,16 @@ function simulateHand_worker() {  //Workaround for Chrome not allowing scripts f
 	function simulateHand(playerHands: Card[][], aiPlayers: EuchreAI[], dealer: Player,
 		trumpCandidate: Card, results: Results): void {
 		const settings: Settings = {
-			sound: false,
-			openHands: false,
+			aiPlayers,
 			enableDefendAlone: false,
 			enableNoTrump: false,
-			showTrickHistory: false,
-			statMode: true,
-			messageLevel: MessageLevel.Multigame,
-			aiPlayers,
 			hasHooman: false,
+			messageLevel: MessageLevel.Multigame,
 			numGamesToPlay: 1,
+			openHands: false,
+			showTrickHistory: false,
+			sound: false,
+			statMode: true,
 		};
 		const hand = new Hand(dealer, aiPlayers, settings, playerHands, trumpCandidate);
 		hand.doHand();
