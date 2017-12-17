@@ -35,17 +35,18 @@ table {
 	max-height: 90vh;
 	max-width: 135vh;*/
 	position: absolute;
-	top: 0px;
-	left: 0px;
+	top: 0;
+	left: 0;
 	background-color: #4C7A34;
 }
 
-#sidebar {
+.sidebar {
 	height: 600px;
-	width: 200px;
+	min-width: 200px;
+	width: 25%;
 	position: absolute;
-	top: 0px;
-	left: 800px;
+	top: 0;
+	right: 0;
 	background-color: #555555;
 }
 
