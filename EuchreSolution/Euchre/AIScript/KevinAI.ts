@@ -186,14 +186,14 @@ class KevinAI implements EuchreAI {
 			const { player, card } = getBestCardPlayed(trickSoFar, trump) as PlayedCard;
 			if (player === getPartner(this.me)) {
 				if (card.rank === Rank.Ace) {
-					return getWorstCardInHand(hand, trickSuit, trump);
+					return this.getThrowawayCard(hand, trickSuit, trump);
 				}
 			}
 			const bestCard = getBestCardInHand(hand, trickSuit, trump) as Card;
 			if (greaterCard(bestCard, card, trickSuit, trump) === bestCard) {
 				return bestCard;
 			} else {
-				return getWorstCardInHand(hand, trickSuit, trump);
+				return this.getThrowawayCard(hand, trickSuit, trump);
 			}
 		} else {
 			if (shouldLeadTrump) {
