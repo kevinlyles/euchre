@@ -25,15 +25,12 @@ function getShuffledDeck(): ShuffleResult {
 		}
 	}
 
-	return {
-		deck,
-		jacks,
-	};
+	return { deck, jacks };
 }
 
 function dealHands(deck: Card[], playerHands: Card[][], dealer: Player): void {
 	for (let i = 0; i < 20; i++) {
-		const player = (dealer + i) % 4;
+		const player = (dealer + i + 1) % 4;
 		const cardPos = Math.floor(i / 4);
 		//TODO: see if skipping the pop makes things faster
 		playerHands[player][cardPos] = deck.pop() as Card;
@@ -200,7 +197,7 @@ class Hand {
 		} else {
 			const bidResult = this.__bidResult as BidResult;
 			this.__trick = new Trick(bidResult.trump, bidResult.alone, this.__playerHands,
-				this.__aiPlayers, bidResult.maker, this.__trick.currentPlayer());
+				this.__aiPlayers, bidResult.maker, this.__trick.winner() as Player);
 		}
 	}
 
