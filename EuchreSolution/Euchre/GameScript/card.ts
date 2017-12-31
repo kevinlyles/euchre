@@ -18,6 +18,26 @@ enum Rank {
 	Right = 16,
 }
 
+const suitTranslations = [
+	Suit.Spades,
+	Suit.Hearts,
+	Suit.Diamonds,
+	Suit.Clubs,
+];
+
+function getCardSymbol(card: Card): string {
+	let cardId = 0x1F0A0;
+	const { suit, rank } = Card.getOriginalSuitAndRank(card);
+	cardId += suitTranslations[suit] * 0x10;
+	cardId += rank;
+	return String.fromCodePoint(cardId);
+}
+
+function getCardShorthand(card: Card): string {
+	const { suit, rank } = Card.getOriginalSuitAndRank(card);
+	return (rank > 10 ? Rank[rank].slice(0, 1) : rank) + String.fromCharCode(0x2660 + suitTranslations[suit]);
+}
+
 interface PlayedCard {
 	player: Player;
 	card: Card;
@@ -41,15 +61,20 @@ class Card {
 			this.rank = card.rank;
 		}
 
-		let suitForId = this.suit;
-		let rankForId = this.rank;
-		if (rankForId === Rank.Right) {
-			rankForId = Rank.Jack;
-		} else if (rankForId === Rank.Left) {
-			rankForId = Rank.Jack;
-			suitForId = getOppositeSuit(suitForId);
-		}
+		const { suit: suitForId, rank: rankForId } = Card.getOriginalSuitAndRank(this);
 		this.id = Suit[suitForId] + rankForId;
+	}
+
+	public static getOriginalSuitAndRank(card: Card): { suit: Suit, rank: Rank } {
+		let suit = card.suit;
+		let rank = card.rank;
+		if (rank === Rank.Right) {
+			rank = Rank.Jack;
+		} else if (rank === Rank.Left) {
+			rank = Rank.Jack;
+			suit = getOppositeSuit(suit);
+		}
+		return { suit, rank };
 	}
 
 	public static safeCard(card: Card): Card;

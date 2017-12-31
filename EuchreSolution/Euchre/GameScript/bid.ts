@@ -65,8 +65,9 @@ class Bid {
 				break;
 			case BidStage.Discard:
 				this.__playerHands[this.__dealer].push(this.__trumpCandidate);
-				this.doDiscard(this.__dealer);
-				this.__stage = BidStage.Finished;
+				if (this.doDiscard(this.__dealer)) {
+					this.__stage = BidStage.Finished;
+				}
 				break;
 			default:
 				break;
@@ -88,13 +89,13 @@ class Bid {
 		if (aiPlayer !== null) {
 			trump = this.doBidAI(aiPlayer, stage, hand);
 			if (trump === null) {
-				animShowText(`${this.__currentPlayer} passed.`, MessageLevel.Step, 1);
+				animShowText(`${message}passed.`, MessageLevel.Step, 1);
 				return null;
 			}
 		} else {
 			trump = this.doBidHooman(stage, hand);
 			if (trump === null) {
-				animShowText(`${this.__currentPlayer} passed.`, MessageLevel.Step, 1);
+				animShowText(`${message}passed.`, MessageLevel.Step, 1);
 				return null;
 			}
 		}
@@ -106,6 +107,8 @@ class Bid {
 			message += `called ${Suit[trump]}`;
 		}
 		animShowText(message, MessageLevel.Step, 1);
+		animShowTextTop(`Trump: ${Suit[trump]}`);
+		animShowTextTop(`Maker: ${Player[this.__currentPlayer]}`);
 		return {
 			stage,
 			trump,
@@ -164,12 +167,18 @@ class Bid {
 		return alone;
 	}
 
-	private doDiscard(dealer: Player): void {
+	private doDiscard(dealer: Player): boolean {
 		const aiPlayer = this.__aiPlayers[dealer];
 		const hand = this.__playerHands[dealer];
 		let discard: Card | null = null;
+		if (pauseForDiscard(aiPlayer)) {
+			return false;
+		}
 		if (aiPlayer) {
 			discard = aiPlayer.pickDiscard(copyHand(hand), this.__trumpCandidate.suit);
+		} else {
+			discard = getCardFromHand(hand, queuedHoomanDiscardCardId as string);
+			discarding = false;
 		}
 		if (!discard || !isInHand(hand, discard)) {
 			discard = hand[0];
@@ -179,9 +188,10 @@ class Bid {
 			if (card.id === discard.id) {
 				hand.splice(i, 1);
 				animTakeTrump(this.__trumpCandidate, card, !!aiPlayer);
-				break;
+				return true;
 			}
 		}
+		return false;
 	}
 
 	private advancePlayer(): void {

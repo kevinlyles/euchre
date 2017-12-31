@@ -1,11 +1,17 @@
 ﻿let pausing: boolean = false;
 let animating: boolean = false;
+let discarding: boolean = false;
 let queuedHoomanOrderUp: boolean | null = null;
 let queuedHoomanBidSuit: Suit | null = null;
 let queuedHoomanCardId: string | null = null;
+let queuedHoomanDiscardCardId: string | null = null;
 
 function clickCard(this: HTMLElement): void {
-	queuedHoomanCardId = this.id;
+	if (discarding) {
+		queuedHoomanDiscardCardId = this.id;
+	} else {
+		queuedHoomanCardId = this.id;
+	}
 	unpause();
 }
 
@@ -36,6 +42,17 @@ function pauseForBid(aiPlayer: EuchreAI | null, hand: Card[], stage: BidStage, t
 	return true;
 }
 
+function pauseForDiscard(aiPlayer: EuchreAI | null): boolean {
+	if (aiPlayer !== null || queuedHoomanDiscardCardId !== null) {
+		return false;
+	}
+
+	pausing = true;
+	discarding = true;
+	animShowText("Hooman's turn to discard", MessageLevel.Step);
+	return true;
+}
+
 function pauseForTrick(aiPlayer: EuchreAI | null): boolean {
 	if (aiPlayer !== null || queuedHoomanCardId !== null) {
 		return false;
@@ -58,4 +75,5 @@ function clearHoomanQueue() {
 	queuedHoomanOrderUp = null;
 	queuedHoomanBidSuit = null;
 	queuedHoomanCardId = null;
+	queuedHoomanDiscardCardId = null;
 }

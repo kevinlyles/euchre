@@ -132,12 +132,16 @@ function animTakeTrump(trumpCandidate: Card, discard: Card, isAIPlayer: boolean)
 	setTimeout(animMoveCard, 100, discard.id, "252px", "364px");
 	setTimeout(animHideCard, 400, discardElem);
 
-	if (!isAIPlayer && !controller.isOpenHands()) {
+	if (isAIPlayer && !controller.isOpenHands()) {
 		trumpElem.classList.add("cardBack");
 	}
 	setTimeout(animMoveCard, 200, trumpCandidate.id, top, left, discardElem.style.zIndex);
 	//TODO: sort the hand again? Probably only if it's visible
 	//TODO: make it look the same even if the picked up card gets discarded
+	if (!isAIPlayer) {
+		trumpElem.addEventListener("click", clickCard);
+		discardElem.removeEventListener("click", clickCard);
+	}
 }
 
 function animPlaceDealerButt(dealer: Player): void {
