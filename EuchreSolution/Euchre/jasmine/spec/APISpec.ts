@@ -382,6 +382,18 @@ describe("API", function () {
 			result = getCardValue(card, Suit.Spades, Suit.Spades);
 			expect(result).toBe(1013);
 		});
+
+		it("Handles 0-value trump", function () {
+			card = new Card(Suit.Clubs, Rank.King);
+			result = getCardValue(card, Suit.Spades, Suit.Clubs);
+			expect(result).toBe(1013);
+		});
+
+		it("Handles 0-value suit", function () {
+			card = new Card(Suit.Clubs, Rank.King);
+			result = getCardValue(card, Suit.Clubs, Suit.Diamonds);
+			expect(result).toBe(113);
+		});
 	});
 
 	describe("isInHand", function () {

@@ -88,9 +88,9 @@ class Controller {
 		//ai settings
 		this.__settings.aiPlayers = [
 			null,
-			new IdiotAI(),
-			new IdiotAI(),
-			new IdiotAI(),
+			new DecentAI(),
+			new DecentAI(),
+			new DecentAI(),
 		];
 		this.__settings.hasHooman = this.__settings.aiPlayers.indexOf(null) > -1;
 
