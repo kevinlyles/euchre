@@ -6,10 +6,10 @@ enum AnimType {
 }
 
 class Animation {
-	public const animType: AnimType;
-	public const player: Player | null;
-	public const cardID: string | null;
-	public const text: string | null;
+	public readonly animType: AnimType;
+	public readonly player: Player | null;
+	public readonly cardID: string | null;
+	public readonly text: string | null;
 
 	constructor(animType: AnimType, player?: Player, cardID?: string, text?: string) {
 		this.animType = animType;

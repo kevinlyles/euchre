@@ -25,13 +25,14 @@ const suitTranslations = [
 	Suit.Clubs,
 ];
 
+/* Commenting -- unused, and breaks Karma
 function getCardSymbol(card: Card): string {
 	let cardId = 0x1F0A0;
 	const { suit, rank } = Card.getOriginalSuitAndRank(card);
 	cardId += suitTranslations[suit] * 0x10;
 	cardId += rank;
 	return String.fromCodePoint(cardId);
-}
+}*/
 
 function getCardShorthand(card: Card): string {
 	const { suit, rank } = Card.getOriginalSuitAndRank(card);
