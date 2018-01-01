@@ -84,7 +84,7 @@ class Bid {
 		}
 
 		const hand = this.__playerHands[this.__currentPlayer];
-		let trump: Suit | null = null;
+		let trump: Suit | null;
 
 		if (aiPlayer !== null) {
 			trump = this.doBidAI(aiPlayer, stage, hand);

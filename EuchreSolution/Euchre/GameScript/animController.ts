@@ -6,22 +6,16 @@ enum AnimType {
 }
 
 class Animation {
-	public animType: AnimType;
-	public player: Player | null;
-	public cardID: string | null;
-	public text: string | null;
+	public const animType: AnimType;
+	public const player: Player | null;
+	public const cardID: string | null;
+	public const text: string | null;
 
 	constructor(animType: AnimType, player?: Player, cardID?: string, text?: string) {
 		this.animType = animType;
-		if (player !== undefined) {
-			this.player = player;
-		}
-		if (cardID !== undefined) {
-			this.cardID = cardID;
-		}
-		if (text !== undefined) {
-			this.text = text;
-		}
+		this.player = player || null;
+		this.cardID = cardID || null;
+		this.text = text || null;
 	}
 
 }
@@ -51,7 +45,7 @@ class AnimController {
 	}
 
 	public getAnimFunction(animType: AnimType, player?: Player, cardID?: string): Function {
-		switch (animType){
+		switch (animType) {
 			case AnimType.DealHands:
 				return animDeal();
 			case AnimType.Discard:
@@ -62,6 +56,6 @@ class AnimController {
 				break;
 			default:
 				break;
-		}	
+		}
 	}
 }
