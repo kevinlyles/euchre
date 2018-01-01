@@ -13,13 +13,12 @@ class Animation {
 
 	constructor(animType: AnimType, player?: Player, cardID?: string, text?: string) {
 		this.animType = animType;
-		this.player = player || null;
-		this.cardID = cardID || null;
-		this.text = text || null;
+		this.player = player === undefined ? null : player;
+		this.cardID = cardID === undefined ? null : cardID;
+		this.text = text === undefined ? null : text;
 	}
 
 }
-
 
 class AnimController {
 	public queuedAnimations: Animation[];
@@ -39,7 +38,6 @@ class AnimController {
 		for (let i = 0; i < this.queuedAnimations.length; i++) {
 			delay = pauseTime * i;
 			animFunction = this.getAnimFunction(animType, player, cardID);
-
 
 		}
 	}

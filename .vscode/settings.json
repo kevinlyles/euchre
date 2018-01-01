@@ -15,5 +15,6 @@
 		"path": [
 			"coverage/PhantomJS 2.1.1 (Linux 0.0.0)/lcovonly"
 		]
-	}
+	},
+	"typescript.tsdk": "node_modules/typescript/lib"
 }

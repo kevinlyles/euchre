@@ -22,9 +22,6 @@ class DecentAI implements EuchreAI {
 	}
 
 	public pickTrump(_hand: Card[], trumpCandidate: Card): Suit | null {
-		if (!trumpCandidate) {
-			return null;
-		}
 		const trumpCandidateSuit = trumpCandidate.suit;
 		if (trumpCandidateSuit !== Suit.Clubs) {
 			this.handStrength = this.calculateHandStrength(Suit.Clubs);

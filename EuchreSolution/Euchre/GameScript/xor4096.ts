@@ -99,10 +99,13 @@ class XorGen {
 let rng: XorGen;
 {
 	const seed = new Uint16Array(128);
+	//tslint:disable-next-line:strict-boolean-expressions -- can't trust the TS types on older browsers
 	if (!seed.join) {
 		seed.join = Array.prototype.join;
 	}
+	//tslint:disable-next-line:strict-boolean-expressions -- can't trust the TS types on older browsers
 	const cryptoObj = window.crypto || ((window as any).msCrypto as Crypto);
+	//tslint:disable-next-line:strict-boolean-expressions -- can't trust the TS types on older browsers
 	if (cryptoObj && cryptoObj.getRandomValues) {
 		cryptoObj.getRandomValues(seed);
 	} else {
@@ -113,7 +116,7 @@ let rng: XorGen;
 			seed[i] = Math.floor(Math.random() * (2 ** 16));
 		}
 	}
-	//tslint:disable-next-line:no-console
+	//tslint:disable-next-line:no-console -- needed to debug issues
 	console.log("Random seed: " + seed.join(", "));
 	rng = new XorGen(seed);
 }

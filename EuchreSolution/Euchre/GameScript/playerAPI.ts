@@ -178,8 +178,6 @@ function getWorstCardInHand(hand: Card[], trickSuit?: Suit, trump?: Suit): Card 
 	let worstValue = 9999;
 	let value;
 
-	if (!hand) { return null; }
-
 	for (const card of hand) {
 		value = getCardValue(card, trickSuit, trump);
 		if (value < worstValue) {
