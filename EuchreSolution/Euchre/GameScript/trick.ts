@@ -92,10 +92,7 @@ class Trick {
 		animShowText(message, MessageLevel.Step, 1);
 		animPlayCard(this.__currentPlayer, card.id);
 
-		this.__currentPlayer = nextPlayer(this.__currentPlayer);
-		if (this.__alone && this.__currentPlayer === getPartner(this.__maker)) {
-			this.__currentPlayer = nextPlayer(this.__currentPlayer);
-		}
+		this.__currentPlayer = getNextPlayer(this.__currentPlayer, this.__alone ? this.__maker : undefined);
 
 		return card;
 	}

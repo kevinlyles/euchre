@@ -189,7 +189,16 @@ function getWorstCardInHand(hand: Card[], trickSuit?: Suit, trump?: Suit): Card 
 }
 
 //**NOT TESTING**
-function nextPlayer(currentPlayer: Player): Player {
+function getNextPlayer(currentPlayer: Player, aloneMaker?: Player): Player {
+	const nextPlayer = getNextPlayerNaive(currentPlayer);
+	if (aloneMaker === undefined || nextPlayer !== getPartner(aloneMaker)) {
+		return nextPlayer;
+	}
+	return getNextPlayerNaive(nextPlayer);
+}
+
+//**NOT TESTING**
+function getNextPlayerNaive(currentPlayer: Player): Player {
 	switch (currentPlayer) {
 		case Player.South:
 			return Player.West;
@@ -235,7 +244,7 @@ function getNextDealer(prevDealer?: Player): Player {
 	if (prevDealer === undefined) {
 		return rng.nextInRange(0, 3);
 	}
-	return nextPlayer(prevDealer);
+	return getNextPlayer(prevDealer);
 }
 
 function copyHand(hand: Card[]): Card[] {
