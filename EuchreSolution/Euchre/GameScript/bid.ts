@@ -162,7 +162,11 @@ class Bid {
 			const hand = this.__playerHands[maker];
 			alone = aiPlayer.chooseGoAlone(copyHand(hand), trump);
 		} else {
-			return false;
+			const aloneCheckbox = document.getElementById("alone") as HTMLInputElement | undefined;
+			if (!aloneCheckbox) {
+				return false;
+			}
+			return aloneCheckbox.checked;
 		}
 		return alone;
 	}

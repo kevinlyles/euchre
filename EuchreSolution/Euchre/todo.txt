@@ -1,4 +1,6 @@
 Next
+- Reset alone checkbox when starting bidding
+- Allow discarding the card you picked up
 - Validate hooman actions nicely
 - Make animations actually timed properly and probably factor out all the visual stuff so it doesn't suck
 - Typescriptify anim

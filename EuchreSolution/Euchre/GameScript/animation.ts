@@ -395,19 +395,6 @@ function animDisableBidding(): void {
 	aloneButton.style.backgroundColor = "green";
 }
 
-////flips a button on or off
-////needs to be generic but for now flips the 'go alone' button
-//function animFlipButton(on: boolean): void {
-//	if (controller && controller.isStatMode()) return;
-
-//	if (on) {
-//		document.getElementById("alone").style.backgroundColor = "red";
-//	}
-//	else {
-//		document.getElementById("alone").style.backgroundColor = "green";
-//	}
-//}
-
 function animShowText(text: string, messageLevel: MessageLevel, nest?: number, overwrite?: boolean): void {
 	let allowedLevel: MessageLevel = MessageLevel.Step;
 	if (controller) {
