@@ -179,7 +179,7 @@ class Bid {
 		const aiPlayer = this.__aiPlayers[dealer];
 		const hand = this.__playerHands[dealer];
 		let discard: Card | null = null;
-		if (pauseForDiscard(aiPlayer)) {
+		if (pauseForDiscard(aiPlayer, this.__trumpCandidate)) {
 			return false;
 		}
 		if (aiPlayer) {

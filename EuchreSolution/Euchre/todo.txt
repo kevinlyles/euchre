@@ -1,8 +1,7 @@
 Next
-- Reset alone checkbox when starting bidding
-- Allow discarding the card you picked up
 - Validate hooman actions nicely
 - Make animations actually timed properly and probably factor out all the visual stuff so it doesn't suck
+- Move card being ordered up to dealer's hand before waiting for a discard
 - Typescriptify anim
 
 Bugs

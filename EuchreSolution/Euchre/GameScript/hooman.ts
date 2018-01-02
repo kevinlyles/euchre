@@ -42,13 +42,17 @@ function pauseForBid(aiPlayer: EuchreAI | null, hand: Card[], stage: BidStage, t
 	return true;
 }
 
-function pauseForDiscard(aiPlayer: EuchreAI | null): boolean {
+function pauseForDiscard(aiPlayer: EuchreAI | null, trumpCandidate: Card): boolean {
 	if (aiPlayer !== null || queuedHoomanDiscardCardId !== null) {
 		return false;
 	}
 
 	pausing = true;
 	discarding = true;
+	const trumpCandidateElement = document.getElementById(trumpCandidate.id);
+	if (trumpCandidateElement) {
+		trumpCandidateElement.addEventListener("click", clickCard);
+	}
 	animShowText("Hooman's turn to discard", MessageLevel.Step);
 	return true;
 }
