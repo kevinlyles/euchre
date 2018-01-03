@@ -6,16 +6,14 @@
 
 declare var controller: Controller | null;
 
-function makeCardElem(cardID: string, flippedUp: boolean): HTMLDivElement {
+function makeCardElem(cardID: string): HTMLDivElement {
 	let card;
 
 	card = document.createElement("div");
 	card.className = "card";
 	card.id = cardID;
 
-	if (!flippedUp) {
-		card.classList.add("cardBack");
-	}
+	card.classList.add("cardBack");
 
 	const cardsContainer = document.getElementById("cardsContainer") as HTMLElement;
 	cardsContainer.appendChild(card);
@@ -43,55 +41,93 @@ function animMoveCard(cardID: string, top: string, left: string, z?: string): vo
 function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player, settings: Settings): void {
 	if (!controller || controller.isStatMode()) { return; }
 
-	let player: Player;
-	let delay: number; //delay to second round deal
-	let cardID: string;
-	let flippedUp: boolean;
-	let cardElem: HTMLElement | null;
 	const isOpenHands = settings.openHands;
 	const hasHooman = settings.hasHooman;
 
-	animClearTable();
-
-	player = getNextPlayer(dealer);
-	delay = 0;
-
-	makeCardElem("deck", false);
-	makeCardElem(trumpCandidate.id, false);
-
-	for (let i = 0; i < hands.length; i++) {
-		flippedUp = (isOpenHands || (hasHooman && player === Player.South));
-		delay = (dealer + i + 1) % 2;
-
-		for (let j = 0; j < hands[i].length; j++) {
-			cardID = hands[player][j].id;
-			makeCardElem(cardID, flippedUp);
-			if (hasHooman && player === Player.South) {
-				cardElem = document.getElementById(cardID);
-				if (cardElem) { cardElem.addEventListener("click", clickCard); }
-			}
-
-			if (j < 2) {
-				setTimeout(animDealSingle, i * 100, player, cardID, j);
-			} else if (j === 2) {
-				setTimeout(animDealSingle, i * 100 + (delay * 500), player, cardID, j);
-			} else {
-				setTimeout(animDealSingle, i * 100 + 500, player, cardID, j);
-			}
-		}
-		player = (player + 1) % 4;
+	{
+		const callback = () => {
+			animClearTable();
+			makeCardElem("deck");
+			makeCardElem(trumpCandidate.id);
+		};
+		AnimController.pushAnimation(AnimType.DealHands, callback);
 	}
 
-	setTimeout(animSortHand, 1000, hands[Player.South], Player.South);
-	if (settings.openHands) {
-		setTimeout(animSortHand, 1000, hands[Player.West], Player.West);
-		setTimeout(animSortHand, 1000, hands[Player.North], Player.North);
-		setTimeout(animSortHand, 1000, hands[Player.East], Player.East);
+	{
+		const wrapper = () => {
+			let player = dealer;
+			for (let i = 0; i < hands.length; i++) {
+				player = getNextPlayer(player);
+				const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
+				const dealThree = (dealer + i) % 2;
+				const cardsToDeal: string[] = [];
+
+				for (let j = 0; j < 2 + dealThree; j++) {
+					const cardID = hands[player][j].id;
+					const cardElem = makeCardElem(cardID);
+					if (hasHooman && player === Player.South) {
+						cardElem.addEventListener("click", clickCard);
+					}
+					cardsToDeal.push(cardID);
+				}
+
+				const playerCopy = player;
+				const callback = () => {
+					for (let j = 0; j < cardsToDeal.length; j++) {
+						animDealSingle(playerCopy, cardsToDeal[j], j, flippedUp);
+					}
+				};
+				AnimController.pushAnimation(AnimType.DealHands, callback);
+			}
+			for (let i = 0; i < hands.length; i++) {
+				player = getNextPlayer(player);
+				const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
+				const dealThree = (dealer + i) % 2;
+				const cardsToDeal: string[] = [];
+
+				for (let j = 2 + dealThree; j < hands[player].length; j++) {
+					const cardID = hands[player][j].id;
+					const cardElem = makeCardElem(cardID);
+					if (hasHooman && player === Player.South) {
+						cardElem.addEventListener("click", clickCard);
+					}
+					cardsToDeal.push(cardID);
+				}
+
+				const playerCopy = player;
+				const callback = () => {
+					for (let j = 0; j < cardsToDeal.length; j++) {
+						animDealSingle(playerCopy, cardsToDeal[j], j + 2 + dealThree, flippedUp);
+					}
+				};
+				AnimController.pushAnimation(AnimType.DealHands, callback);
+			}
+			{
+				const callback = () => {
+					for (const _ of hands) {
+						player = getNextPlayer(player);
+						const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
+
+						if (flippedUp) {
+							animSortHand(hands[player], player);
+						}
+					}
+				};
+				AnimController.pushAnimation(AnimType.DealHands, callback);
+			}
+
+			{
+				const callback = () => {
+					animFlipCard(trumpCandidate.id);
+				};
+				AnimController.pushAnimation(AnimType.DealHands, callback);
+			}
+		};
+		AnimController.pushAnimation(AnimType.NoDelay, wrapper);
 	}
-	setTimeout(animFlipCard, 1000, trumpCandidate.id);
 }
 
-function animDealSingle(player: Player, cardID: string, cardPos: number): void {
+function animDealSingle(player: Player, cardID: string, cardPos: number, flippedUp: boolean): void {
 	let top;
 	let left;
 
@@ -116,6 +152,9 @@ function animDealSingle(player: Player, cardID: string, cardPos: number): void {
 			return;
 	}
 
+	if (flippedUp) {
+		animFlipCard(cardID);
+	}
 	animMoveCard(cardID, top, left);
 }
 
@@ -210,8 +249,7 @@ function animSortHand(hand: Card[], player: Player): void {
 	keys.sort();
 	let pos = 0;
 	for (const key of keys) {
-		setTimeout(animDealSingle, 300, player, cardIds[key], pos);
-		pos++;
+		animDealSingle(player, cardIds[key], pos++, false);
 	}
 }
 
@@ -263,38 +301,40 @@ function animFlipCard(cardID: string): void {
 function animWinTrick(player: Player, playedCards: PlayedCard[]): void {
 	if (!controller || controller.isStatMode()) { return; }
 
-	let cardElem;
-	let top;
-	let left;
+	const callback = () => {
+		let top;
+		let left;
 
-	switch (player) {
-		case Player.South:
-			top = "450px";
-			left = "320px";
-			break;
-		case Player.West:
-			top = "252px";
-			left = "50px";
-			break;
-		case Player.North:
-			top = "50px";
-			left = "320px";
-			break;
-		case Player.East:
-			top = "252px";
-			left = "600px";
-			break;
-		default:
-			return;
-	}
+		switch (player) {
+			case Player.South:
+				top = "450px";
+				left = "320px";
+				break;
+			case Player.West:
+				top = "252px";
+				left = "50px";
+				break;
+			case Player.North:
+				top = "50px";
+				left = "320px";
+				break;
+			case Player.East:
+				top = "252px";
+				left = "600px";
+				break;
+			default:
+				return;
+		}
 
-	for (const playedCard of playedCards) {
-		cardElem = document.getElementById(playedCard.card.id) as HTMLElement;
-		cardElem.style.top = top;
-		cardElem.style.left = left;
-		cardElem.classList.add("cardBack");
-		setTimeout(animHideCard, 400, cardElem);
-	}
+		for (const playedCard of playedCards) {
+			const cardElem = document.getElementById(playedCard.card.id) as HTMLElement;
+			cardElem.style.top = top;
+			cardElem.style.left = left;
+			cardElem.classList.add("cardBack");
+			setTimeout(animHideCard, 400, cardElem);
+		}
+	};
+	AnimController.pushAnimation(AnimType.WinTrick, callback);
 }
 
 /*function animRemoveKitty(): void {

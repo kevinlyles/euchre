@@ -57,7 +57,7 @@ class Trick {
 			card = getCardFromHand(hand, queuedHoomanCardId as string);
 			clearHoomanQueue();
 		}
-		this.playCard(card);
+		this.playCard(card, !!aiPlayer);
 		if (this.isFinished()) {
 			this.endTrick();
 		}
@@ -73,10 +73,11 @@ class Trick {
 		animWinTrick(this.winner() as Player, this.cardsPlayed());
 	}
 
-	protected playCard(card: Card | null): Card | null {
+	protected playCard(card: Card | null, delay: boolean): Card | null {
 		if (this.isFinished()) { return null; }
 
-		const hand: Card[] = this.__playerHands[this.__currentPlayer];
+		const currentPlayer = this.__currentPlayer;
+		const hand: Card[] = this.__playerHands[currentPlayer];
 
 		if (!card || !isInHand(hand, card) || !isValidPlay(hand, card, this.__suitLead)) {
 			card = getFirstLegalCard(hand, this.__suitLead) as Card;
@@ -85,14 +86,18 @@ class Trick {
 		if (this.__playedCards.length === 0) {
 			this.__suitLead = card.suit;
 		}
-		this.__playedCards.push({ player: this.__currentPlayer, card });
-		this.removeFromHand(this.__currentPlayer, card);
+		this.__playedCards.push({ player: currentPlayer, card });
+		this.removeFromHand(currentPlayer, card);
 
-		const message = `${Player[this.__currentPlayer]} played ${getCardShorthand(card)}`;
+		const message = `${Player[currentPlayer]} played ${getCardShorthand(card)}`;
 		animShowText(message, MessageLevel.Step, 1);
-		animPlayCard(this.__currentPlayer, card.id);
+		const cardId = card.id;
+		const callback = () => {
+			animPlayCard(currentPlayer, cardId);
+		};
+		AnimController.pushAnimation(delay ? AnimType.PlayCard : AnimType.NoDelay, callback);
 
-		this.__currentPlayer = getNextPlayer(this.__currentPlayer, this.__alone ? this.__maker : undefined);
+		this.__currentPlayer = getNextPlayer(currentPlayer, this.__alone ? this.__maker : undefined);
 
 		return card;
 	}
