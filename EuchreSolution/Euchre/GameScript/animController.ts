@@ -6,12 +6,8 @@ enum AnimType {
 }
 
 interface Animation {
-	readonly animType: AnimType;
 	readonly delay: number;
 	readonly callback: () => void;
-	readonly player?: Player;
-	readonly cardID?: string;
-	readonly text?: string;
 }
 
 const delays = {
@@ -24,8 +20,8 @@ const delays = {
 class AnimController {
 	public queuedAnimations: Animation[];
 
-	public pushAnimation(animType: AnimType, callback: () => void, player?: Player, cardID?: string, text?: string): void {
-		const animation: Animation = { animType, delay: delays[animType], callback, player, cardID, text };
+	public pushAnimation(animType: AnimType, callback: () => void): void {
+		const animation: Animation = { delay: delays[animType], callback };
 		this.queuedAnimations.push(animation);
 	}
 
@@ -33,6 +29,10 @@ class AnimController {
 		if (this.queuedAnimations.length <= 0) { return; }
 
 		const animation = this.queuedAnimations.shift() as Animation;
-		setTimeout(animation.callback, animation.delay, animation.player, animation.cardID, animation.text);
+		const wrapper = () => {
+			animation.callback();
+			this.executeAnimations();
+		};
+		setTimeout(wrapper, animation.delay, this);
 	}
 }
