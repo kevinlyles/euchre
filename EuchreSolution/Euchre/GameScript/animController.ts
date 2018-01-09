@@ -23,7 +23,7 @@ class AnimController {
 	private static queuedAnimations: Animation[] = [];
 	private static running = false;
 
-	public static pushAnimation(animType: AnimType, callback: () => void): void {
+	public static queueAnimation(animType: AnimType, callback: () => void): void {
 		const animation: Animation = { delay: delays[animType], callback };
 		this.queuedAnimations.push(animation);
 		this.executeNextAnimation();

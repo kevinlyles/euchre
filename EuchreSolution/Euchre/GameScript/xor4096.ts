@@ -112,7 +112,7 @@ let rng: XorGen;
 		const url = new URL(window.location.href);
 		const randomSeedString = url.searchParams.get("randomseed");
 		if (randomSeedString) {
-			randomSeedString.split(", ").map((value, index) => seed[index] = parseInt(value, 10));
+			randomSeedString.split(",").map((value, index) => seed[index] = parseInt(value, 10));
 			done = true;
 		}
 	}
@@ -130,6 +130,6 @@ let rng: XorGen;
 		}
 	}
 	//tslint:disable-next-line:no-console -- needed to debug issues
-	console.log("Random seed: " + seed.join(", "));
+	console.log("Random seed: " + seed.join(","));
 	rng = new XorGen(seed);
 }

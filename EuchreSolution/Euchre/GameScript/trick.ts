@@ -95,7 +95,7 @@ class Trick {
 		const callback = () => {
 			animPlayCard(currentPlayer, cardId);
 		};
-		AnimController.pushAnimation(delay ? AnimType.PlayCard : AnimType.NoDelay, callback);
+		AnimController.queueAnimation(delay ? AnimType.PlayCard : AnimType.NoDelay, callback);
 
 		this.__currentPlayer = getNextPlayer(currentPlayer, this.__alone ? this.__maker : undefined);
 

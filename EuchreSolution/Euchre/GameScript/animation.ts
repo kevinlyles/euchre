@@ -50,7 +50,7 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player, setting
 			makeCardElem("deck");
 			makeCardElem(trumpCandidate.id);
 		};
-		AnimController.pushAnimation(AnimType.DealHands, callback);
+		AnimController.queueAnimation(AnimType.DealHands, callback);
 	}
 
 	{
@@ -77,7 +77,7 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player, setting
 						animDealSingle(playerCopy, cardsToDeal[j], j, flippedUp);
 					}
 				};
-				AnimController.pushAnimation(AnimType.DealHands, callback);
+				AnimController.queueAnimation(AnimType.DealHands, callback);
 			}
 			for (let i = 0; i < hands.length; i++) {
 				player = getNextPlayer(player);
@@ -100,7 +100,7 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player, setting
 						animDealSingle(playerCopy, cardsToDeal[j], j + 2 + dealThree, flippedUp);
 					}
 				};
-				AnimController.pushAnimation(AnimType.DealHands, callback);
+				AnimController.queueAnimation(AnimType.DealHands, callback);
 			}
 			{
 				const callback = () => {
@@ -113,17 +113,17 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player, setting
 						}
 					}
 				};
-				AnimController.pushAnimation(AnimType.DealHands, callback);
+				AnimController.queueAnimation(AnimType.DealHands, callback);
 			}
 
 			{
 				const callback = () => {
 					animFlipCard(trumpCandidate.id);
 				};
-				AnimController.pushAnimation(AnimType.DealHands, callback);
+				AnimController.queueAnimation(AnimType.DealHands, callback);
 			}
 		};
-		AnimController.pushAnimation(AnimType.NoDelay, wrapper);
+		AnimController.queueAnimation(AnimType.NoDelay, wrapper);
 	}
 }
 
@@ -334,7 +334,7 @@ function animWinTrick(player: Player, playedCards: PlayedCard[]): void {
 			setTimeout(animHideCard, 400, cardElem);
 		}
 	};
-	AnimController.pushAnimation(AnimType.WinTrick, callback);
+	AnimController.queueAnimation(AnimType.WinTrick, callback);
 }
 
 /*function animRemoveKitty(): void {
