@@ -26,10 +26,10 @@ class AnimController {
 	public static pushAnimation(animType: AnimType, callback: () => void): void {
 		const animation: Animation = { delay: delays[animType], callback };
 		this.queuedAnimations.push(animation);
-		this.executeAnimations();
+		this.executeNextAnimation();
 	}
 
-	private static executeAnimations(): void {
+	private static executeNextAnimation(): void {
 		if (this.queuedAnimations.length <= 0) {
 			this.running = false;
 			return;
@@ -44,7 +44,7 @@ class AnimController {
 		const wrapper = () => {
 			animation.callback();
 			this.running = false;
-			this.executeAnimations();
+			this.executeNextAnimation();
 		};
 		setTimeout(wrapper, animation.delay, this);
 	}
