@@ -47,7 +47,7 @@ class Bid {
 			case BidStage.Round2:
 				this.__bidResult = this.doBid(this.__stage);
 
-				if (pausing) { return; }
+				if (pausedForHuman) { return; }
 
 				this.advancePlayer();
 
@@ -227,10 +227,9 @@ class Bid {
 
 	/* Public functions */
 	public doBidding(): void {
-		while (!this.isFinished() && !pausing) {
+		while (!this.isFinished() && !pausedForHuman) {
 			this.advanceBid();
 		}
-		pausing = true;
 		if (this.isFinished()) {
 			this.__doneCallback(this.__bidResult as BidResult);
 		}

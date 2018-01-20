@@ -477,7 +477,7 @@ describe("HandSpec", function () {
 			});
 
 			afterEach(function () {
-				pausing = false;
+				pausedForHuman = false;
 			});
 
 			it("handStage", function () {

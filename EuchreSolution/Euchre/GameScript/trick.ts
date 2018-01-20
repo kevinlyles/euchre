@@ -117,10 +117,9 @@ class Trick {
 
 	/* Public functions */
 	public doTrick(): void {
-		while (!this.isFinished() && !pausing) {
+		while (!this.isFinished() && !pausedForHuman) {
 			this.advanceTrick();
 		}
-		pausing = true;
 		if (this.isFinished()) {
 			this.__doneCallback();
 		}

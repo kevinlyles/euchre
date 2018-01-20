@@ -16,6 +16,7 @@ class Game {
 	private __hand: Hand | null;
 	private __aiPlayers: (EuchreAI | null)[];
 	private __doneCallback: () => void;
+	private __waiting = false;
 
 	public nsScore(): number {
 		return this.__nsScore;
@@ -43,14 +44,15 @@ class Game {
 	 ********************************/
 	private advanceGame(): void {
 		if (!this.__hand) {
-			this.__hand = new Hand(this.handDone, this.__dealer, this.__aiPlayers, this.__settings);
+			const callback = () => this.handDone();
+			this.__hand = new Hand(callback, this.__dealer, this.__aiPlayers, this.__settings);
 		}
+		this.__waiting = true;
 		this.__hand.doHand();
-		pausing = true;
 	}
 
 	private handDone(): void {
-		pausing = false;
+		this.__waiting = false;
 		this.handleEndHand();
 		this.__hand = null;
 		if (this.__nsScore >= 10 || this.__ewScore >= 10) {
@@ -80,8 +82,11 @@ class Game {
 	 ********************************/
 
 	public doGame(): void {
-		while (!this.isFinished() && !pausing) {
+		while (!this.isFinished() && !pausedForHuman) {
 			this.advanceGame();
+			if (this.__waiting) {
+				break;
+			}
 		}
 		if (this.isFinished()) {
 			this.__doneCallback();

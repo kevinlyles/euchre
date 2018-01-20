@@ -62,6 +62,7 @@ class Hand {
 	private __playerHands: Card[][]; //2d array of everyone's hands
 	private __aiPlayers: (EuchreAI | null)[];
 	private __handStage: HandStage;
+	private __waiting = false;
 
 	//Bidding related
 	private __bid: Bid;
@@ -109,8 +110,6 @@ class Hand {
 	/* constructor */
 	constructor(doneCallback: () => void, dealer: Player,
 		aiPlayers: (EuchreAI | null)[], settings: Settings) {
-
-		console.log("Constructor: " + JSON.stringify(this));
 		this.__doneCallback = doneCallback;
 		this.__settings = settings;
 		this.__dealer = dealer;
@@ -128,12 +127,12 @@ class Hand {
 	}
 
 	private bidComplete(result: BidResult | null): void {
-		console.log("bidComplete: " + JSON.stringify(this));
-		pausing = false;
+		this.__waiting = false;
 		this.__bidResult = result;
 		if (result) {
 			const nextPlayer = getNextPlayer(this.__dealer, result.alone ? result.maker : undefined);
-			this.__trick = new Trick(this.handleEndTrick, result.trump, result.alone,
+			const callback = () => this.handleEndTrick();
+			this.__trick = new Trick(callback, result.trump, result.alone,
 				this.__playerHands, this.__aiPlayers, result.maker, nextPlayer);
 			this.__handStage = HandStage.Playing;
 		} else {
@@ -150,14 +149,15 @@ class Hand {
 				this.__playerHands = [[], [], [], []];
 				dealHands(deck, this.__playerHands, this.__dealer);
 				this.__trumpCandidate = deck.pop() as Card;
+				this.__waiting = true;
 				animDeal(this.__playerHands, this.__trumpCandidate, this.__dealer, this.__settings, () => {
-					this.__bid = new Bid(this.bidComplete, this.__playerHands, jacks,
+					const callback = (result: BidResult | null) => this.bidComplete(result);
+					this.__bid = new Bid(callback, this.__playerHands, jacks,
 						this.__aiPlayers, this.__dealer, this.__trumpCandidate);
 					this.__handStage = HandStage.Bidding;
-					pausing = false;
+					this.__waiting = false;
 					this.doHand();
 				});
-				pausing = true;
 				break;
 			case HandStage.Bidding:
 				this.__bid.doBidding();
@@ -171,7 +171,7 @@ class Hand {
 	}
 
 	private handleEndTrick(): void {
-		pausing = false;
+		this.__waiting = false;
 		if (this.__trick.winningTeam() === Team.NorthSouth) {
 			this.__nsTricksWon++;
 			animShowText("NS won this trick", MessageLevel.Step, 2);
@@ -185,7 +185,8 @@ class Hand {
 			return;
 		}
 		const bidResult = this.__bidResult as BidResult;
-		this.__trick = new Trick(this.handleEndTrick, bidResult.trump, bidResult.alone,
+		const callback = () => this.handleEndTrick();
+		this.__trick = new Trick(callback, bidResult.trump, bidResult.alone,
 			this.__playerHands, this.__aiPlayers, bidResult.maker, this.__trick.winner() as Player);
 	}
 
@@ -204,8 +205,11 @@ class Hand {
 
 	/* Public functions */
 	public doHand(): void {
-		while (!this.isFinished() && !pausing) {
+		while (!this.isFinished() && !pausedForHuman) {
 			this.advanceHand();
+			if (this.__waiting) {
+				break;
+			}
 		}
 		if (this.isFinished()) {
 			this.__doneCallback();

@@ -122,7 +122,8 @@ class Controller {
 	}
 
 	private playGame(): void {
-		this.__game = new Game(this.gameDone, this.__settings);
+		const callback = () => this.gameDone();
+		this.__game = new Game(callback, this.__settings);
 		this.continue();
 	}
 

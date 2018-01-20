@@ -1,4 +1,4 @@
-﻿let pausing: boolean = false;
+﻿let pausedForHuman: boolean = false;
 let animating: boolean = false;
 let discarding: boolean = false;
 let queuedHoomanOrderUp: boolean | null = null;
@@ -34,7 +34,7 @@ function pauseForBid(aiPlayer: EuchreAI | null, hand: Card[], stage: BidStage, t
 		return false;
 	}
 
-	pausing = true;
+	pausedForHuman = true;
 	animShowText("Hooman's turn", MessageLevel.Step);
 	if (stage === BidStage.Round1 || stage === BidStage.Round2) {
 		setTimeout(animEnableBidding(hand, stage, trumpCandidate), 3000);
@@ -47,7 +47,7 @@ function pauseForDiscard(aiPlayer: EuchreAI | null, trumpCandidate: Card): boole
 		return false;
 	}
 
-	pausing = true;
+	pausedForHuman = true;
 	discarding = true;
 	const trumpCandidateElement = document.getElementById(trumpCandidate.id);
 	if (trumpCandidateElement) {
@@ -62,7 +62,7 @@ function pauseForTrick(aiPlayer: EuchreAI | null): boolean {
 		return false;
 	}
 
-	pausing = true;
+	pausedForHuman = true;
 	animShowText("Hooman's turn", MessageLevel.Step);
 	return true;
 	//do animation stuff
@@ -70,7 +70,7 @@ function pauseForTrick(aiPlayer: EuchreAI | null): boolean {
 
 function unpause() {
 	animDisableBidding();
-	pausing = false;
+	pausedForHuman = false;
 	if (controller) { controller.continue(); }
 }
 
