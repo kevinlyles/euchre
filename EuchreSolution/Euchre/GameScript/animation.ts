@@ -38,17 +38,21 @@ function animMoveCard(cardID: string, top: string, left: string, z?: string): vo
 	zIndex++;
 }
 
-function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player, settings: Settings): void {
+function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player,
+	settings: Settings, callback: () => void): void {
+
 	if (!controller || controller.isStatMode()) { return; }
 
 	const isOpenHands = settings.openHands;
 	const hasHooman = settings.hasHooman;
 
 	{
+		const trumpCandidateId = trumpCandidate.id;
 		const callback = () => {
 			animClearTable();
+			animPlaceDealerButt(dealer);
 			makeCardElem("deck");
-			makeCardElem(trumpCandidate.id);
+			makeCardElem(trumpCandidateId);
 		};
 		AnimController.queueAnimation(AnimType.DealHands, callback);
 	}
@@ -122,6 +126,7 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player, setting
 				};
 				AnimController.queueAnimation(AnimType.DealHands, callback);
 			}
+			callback();
 		};
 		AnimController.queueAnimation(AnimType.NoDelay, wrapper);
 	}
@@ -251,6 +256,7 @@ function animSortHand(hand: Card[], player: Player): void {
 	for (const key of keys) {
 		animDealSingle(player, cardIds[key], pos++, false);
 	}
+	//TODO: make this avoid gaps, always look like things are moving
 }
 
 function animPlayCard(player: Player, cardID: string): void {

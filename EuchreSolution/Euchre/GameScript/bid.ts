@@ -22,10 +22,12 @@ class Bid {
 	private __playersBid: number = 0; //number of players who have bid so far
 	private __trumpCandidate: Card; //turned up card
 	private __bidResult: BidResult | null = null;
+	private __doneCallback: (result: BidResult) => void;
 
 	/* constructor */
-	constructor(hands: Card[][], jacks: Card[], aiPlayers: (EuchreAI | null)[],
-		dealer: Player, trumpCandidate: Card) {
+	constructor(doneCallback: (result: BidResult) => void, hands: Card[][], jacks: Card[],
+		aiPlayers: (EuchreAI | null)[], dealer: Player, trumpCandidate: Card) {
+		this.__doneCallback = doneCallback;
 		this.__playerHands = hands;
 		this.__jacks = jacks;
 		this.__aiPlayers = aiPlayers;
@@ -207,7 +209,7 @@ class Bid {
 		this.__playersBid++;
 	}
 
-	private setTrump(trump: Suit) {
+	private setTrump(trump: Suit): void {
 		const right = this.__jacks[trump];
 		right.rank = Rank.Right;
 		const left = this.__jacks[getOppositeSuit(trump)];
@@ -215,7 +217,7 @@ class Bid {
 		left.rank = Rank.Left;
 	}
 
-	private everyoneBid() {
+	private everyoneBid(): boolean {
 		return this.__playersBid === 4;
 	}
 
@@ -224,10 +226,13 @@ class Bid {
 	}
 
 	/* Public functions */
-	public doBidding(): BidResult | null {
+	public doBidding(): void {
 		while (!this.isFinished() && !pausing) {
 			this.advanceBid();
 		}
-		return this.__bidResult;
+		pausing = true;
+		if (this.isFinished()) {
+			this.__doneCallback(this.__bidResult as BidResult);
+		}
 	}
 }

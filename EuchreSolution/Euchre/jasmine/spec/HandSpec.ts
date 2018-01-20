@@ -1,4 +1,5 @@
 describe("HandSpec", function () {
+	const nullCallback = () => { return; };
 	let hand: Hand;
 	let aiPlayers: EuchreAI[];
 	let playerHands: Card[][];
@@ -100,7 +101,7 @@ describe("HandSpec", function () {
 
 	describe("No one bids", function () {
 		beforeEach(function () {
-			hand.doHand();
+			hand.doHand(nullCallback, nullCallback);
 		});
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
@@ -137,7 +138,7 @@ describe("HandSpec", function () {
 	describe("Actually play a hand (ordered up)", function () {
 		beforeEach(function () {
 			spyOn(aiPlayers[0], "chooseOrderUp").and.returnValue(true);
-			hand.doHand();
+			hand.doHand(nullCallback, nullCallback);
 		});
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
@@ -175,7 +176,7 @@ describe("HandSpec", function () {
 		beforeEach(function () {
 			spyOn(aiPlayers[0], "chooseOrderUp").and.returnValue(true);
 			spyOn(aiPlayers[0], "pickCard").and.callThrough();
-			hand.doHand();
+			hand.doHand(nullCallback, nullCallback);
 		});
 		it("Right player leads", function () {
 			const calls = (aiPlayers[0].pickCard as jasmine.Spy).calls;
@@ -191,7 +192,7 @@ describe("HandSpec", function () {
 		beforeEach(function () {
 			spyOn(aiPlayers[0], "chooseOrderUp").and.returnValue(true);
 			spyOn(aiPlayers[0], "chooseGoAlone").and.returnValue(true);
-			hand.doHand();
+			hand.doHand(nullCallback, nullCallback);
 		});
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
@@ -228,7 +229,7 @@ describe("HandSpec", function () {
 	describe("Actually play a hand (called)", function () {
 		beforeEach(function () {
 			spyOn(aiPlayers[1], "pickTrump").and.returnValue(Suit.Diamonds);
-			hand.doHand();
+			hand.doHand(nullCallback, nullCallback);
 		});
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
@@ -266,7 +267,7 @@ describe("HandSpec", function () {
 		beforeEach(function () {
 			spyOn(aiPlayers[1], "pickTrump").and.returnValue(Suit.Diamonds);
 			spyOn(aiPlayers[1], "chooseGoAlone").and.returnValue(true);
-			hand.doHand();
+			hand.doHand(nullCallback, nullCallback);
 		});
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
@@ -472,7 +473,7 @@ describe("HandSpec", function () {
 				bid = new Bid(playerHands, jacks, mixedPlayers, Player.North, trumpCandidate);
 				(hand as any).__bid = bid;
 				spyOn(mixedPlayers[3], "chooseOrderUp").and.returnValue(true);
-				hand.doHand();
+				hand.doHand(nullCallback, nullCallback);
 			});
 
 			afterEach(function () {

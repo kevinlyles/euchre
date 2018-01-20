@@ -22,19 +22,34 @@ const delays = {
 class AnimController {
 	private static queuedAnimations: Animation[] = [];
 	private static running = false;
+	private static doDelays = true;
+
+	public static setDoDelays(doDelays: boolean): void {
+		this.doDelays = doDelays;
+	}
 
 	public static queueAnimation(animType: AnimType, callback: () => void): void {
+		//animShowText("DEBUG: started queueAnimation", MessageLevel.Game, 4);
+		if (!this.doDelays) {
+			callback();
+			//animShowText("DEBUG: ended queueAnimation, executed immediately", MessageLevel.Game, 4);
+			return;
+		}
 		const animation: Animation = { delay: delays[animType], callback };
 		this.queuedAnimations.push(animation);
+		//animShowText("DEBUG: ended queueAnimation, queued", MessageLevel.Game, 4);
 		this.executeNextAnimation();
 	}
 
 	private static executeNextAnimation(): void {
+		//animShowText("DEBUG: started executeNextAnimation", MessageLevel.Game, 4);
 		if (this.queuedAnimations.length <= 0) {
 			this.running = false;
+			//animShowText("DEBUG: ended executeNextAnimation -- nothing to run", MessageLevel.Game, 4);
 			return;
 		}
 		if (this.running) {
+			//animShowText("DEBUG: ended executeNextAnimation -- something is already running", MessageLevel.Game, 4);
 			return;
 		}
 
@@ -42,10 +57,14 @@ class AnimController {
 
 		const animation = this.queuedAnimations.shift() as Animation;
 		const wrapper = () => {
+			//animShowText("DEBUG: started wrapper in executeNextAnimation", MessageLevel.Game, 4);
+			//animShowText("DEBUG: callback function: " + animation.callback.toString(), MessageLevel.Game, 4);
 			animation.callback();
 			this.running = false;
+			//animShowText("DEBUG: ended wrapper in executeNextAnimation", MessageLevel.Game, 4);
 			this.executeNextAnimation();
 		};
-		setTimeout(wrapper, animation.delay, this);
+		setTimeout(wrapper, animation.delay);
+		//animShowText("DEBUG: ended executeNextAnimation -- called setTimeout", MessageLevel.Game, 4);
 	}
 }

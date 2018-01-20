@@ -32,7 +32,7 @@ describe("GameSpec", function () {
 
 	describe("End game", function () {
 		beforeEach(function () {
-			game.doGame();
+			game.doGame(() => { return; });
 		});
 
 		it("isFinished", function () {
