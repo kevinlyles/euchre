@@ -44,14 +44,13 @@ class Game {
 	 ********************************/
 	private advanceGame(): void {
 		if (!this.__hand) {
-			const callback = () => this.handDone();
-			this.__hand = new Hand(callback, this.__dealer, this.__aiPlayers, this.__settings);
+			this.__hand = new Hand(this.handDone, this.__dealer, this.__aiPlayers, this.__settings);
 		}
 		this.__waiting = true;
 		this.__hand.doHand();
 	}
 
-	private handDone(): void {
+	private handDone = (): void => {
 		this.__waiting = false;
 		this.handleEndHand();
 		this.__hand = null;

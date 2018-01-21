@@ -125,7 +125,6 @@ class Hand {
 		dealHands(deck, this.__playerHands, this.__dealer);
 		this.__trumpCandidate = deck.pop() as Card;
 		this.__waiting = true;
-		//const callback = (result: BidResult | null) => this.bidComplete(result, this.endHand);
 		this.__bid = new Bid(this.bidComplete, this.__playerHands, jacks,
 			this.__aiPlayers, this.__dealer, this.__trumpCandidate);
 		const wrapper = () => {
@@ -136,17 +135,15 @@ class Hand {
 		animDeal(this.__playerHands, this.__trumpCandidate, this.__dealer, settings, wrapper);
 	}
 
-	private bidComplete(result: BidResult | null/*, endHandCallback: (completed: boolean) => void*/): void {
+	private bidComplete = (result: BidResult | null): void => {
 		this.__waiting = false;
 		this.__bidResult = result;
 		if (result) {
 			const nextPlayer = getNextPlayer(this.__dealer, result.alone ? result.maker : undefined);
-			const callback = () => this.handleEndTrick();
-			this.__trick = new Trick(callback, result.trump, result.alone,
+			this.__trick = new Trick(this.handleEndTrick, result.trump, result.alone,
 				this.__playerHands, this.__aiPlayers, result.maker, nextPlayer);
 			this.__handStage = HandStage.Playing;
 		} else {
-			//endHandCallback(false);
 			this.endHand(false);
 		}
 		this.doHand();
@@ -165,7 +162,7 @@ class Hand {
 		}
 	}
 
-	private handleEndTrick(): void {
+	private handleEndTrick = (): void => {
 		this.__waiting = false;
 		if (this.__trick.winningTeam() === Team.NorthSouth) {
 			this.__nsTricksWon++;
@@ -180,12 +177,11 @@ class Hand {
 			return;
 		}
 		const bidResult = this.__bidResult as BidResult;
-		const callback = () => this.handleEndTrick();
-		this.__trick = new Trick(callback, bidResult.trump, bidResult.alone,
+		this.__trick = new Trick(this.handleEndTrick, bidResult.trump, bidResult.alone,
 			this.__playerHands, this.__aiPlayers, bidResult.maker, this.__trick.winner() as Player);
 	}
 
-	private endHand(completed: boolean): void {
+	private endHand = (completed: boolean): void => {
 		if (!completed || !this.__bidResult) {
 			this.__handStage = HandStage.Finished;
 			return; //TODO: deal with no one bidding

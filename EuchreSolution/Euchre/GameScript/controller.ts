@@ -122,12 +122,11 @@ class Controller {
 	}
 
 	private playGame(): void {
-		const callback = () => this.gameDone();
-		this.__game = new Game(callback, this.__settings);
+		this.__game = new Game(this.gameDone, this.__settings);
 		this.continue();
 	}
 
-	private gameDone(): void {
+	private gameDone = (): void => {
 		this.handleEndGame();
 		this.__gameCount++;
 		if (this.__gameCount < this.__settings.numGamesToPlay) {

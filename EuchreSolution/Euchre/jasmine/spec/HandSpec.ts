@@ -527,9 +527,8 @@ describe("HandSpec", function () {
 			let bid: Bid;
 			let jacks: Card[];
 
-			beforeEach(function (done: DoneFn) {
-				const setup = setupHand(done);
-				hand = setup.hand;
+			beforeEach(function () {
+				const setup = setupHand();
 				playerHands = setup.playerHands;
 				trumpCandidate = setup.trumpCandidate;
 				aiPlayers = setup.aiPlayers;

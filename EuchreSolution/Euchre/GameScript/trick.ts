@@ -94,10 +94,10 @@ class Trick {
 		const message = `${Player[currentPlayer]} played ${getCardShorthand(card)}`;
 		animShowText(message, MessageLevel.Step, 1);
 		const cardId = card.id;
-		const callback = () => {
+		const wrapper = () => {
 			animPlayCard(currentPlayer, cardId);
 		};
-		AnimController.queueAnimation(delay ? AnimType.PlayCard : AnimType.NoDelay, callback);
+		AnimController.queueAnimation(delay ? AnimType.PlayCard : AnimType.NoDelay, wrapper);
 
 		this.__currentPlayer = getNextPlayer(currentPlayer, this.__alone ? this.__maker : undefined);
 
