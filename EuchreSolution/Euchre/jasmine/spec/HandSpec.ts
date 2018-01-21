@@ -73,8 +73,6 @@ function setupHand(doneCallback: DoneFn | (() => void) = () => { return; }): {
 }
 
 describe("HandSpec", function () {
-	jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
-
 	describe("Initial state", function () {
 		const { hand, playerHands, trumpCandidate } = setupHand();
 
