@@ -12,8 +12,7 @@ function makeCardElem(cardID: string): HTMLDivElement {
 	card = document.createElement("div");
 	card.className = "card";
 	card.id = cardID;
-
-	card.classList.add("cardBack");
+	animFlipCard(card, false);
 
 	const cardsContainer = document.getElementById("cardsContainer") as HTMLElement;
 	cardsContainer.appendChild(card);
@@ -122,7 +121,7 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player,
 
 			{
 				const callback = () => {
-					animFlipCard(trumpCandidate.id);
+					animFlipCard(trumpCandidate.id, true);
 				};
 				AnimController.queueAnimation(AnimType.DealHands, callback);
 			}
@@ -158,7 +157,7 @@ function animDealSingle(player: Player, cardID: string, cardPos: number, flipped
 	}
 
 	if (flippedUp) {
-		animFlipCard(cardID);
+		animFlipCard(cardID, true);
 	}
 	animMoveCard(cardID, top, left);
 }
@@ -172,12 +171,12 @@ function animTakeTrump(trumpCandidate: Card, discard: Card, isAIPlayer: boolean)
 	const top = discardElem.style.top;
 	const left = discardElem.style.left;
 
-	discardElem.classList.add("cardBack");
+	animFlipCard(discardElem, false);
 	setTimeout(animMoveCard, 100, discard.id, "252px", "364px");
 	setTimeout(animHideCard, 400, discardElem);
 
 	if (isAIPlayer && !controller.isOpenHands()) {
-		trumpElem.classList.add("cardBack");
+		animFlipCard(trumpElem, false);
 	}
 	setTimeout(animMoveCard, 200, trumpCandidate.id, top, left, discardElem.style.zIndex);
 	//TODO: sort the hand again? Probably only if it's visible
@@ -268,7 +267,7 @@ function animPlayCard(player: Player, cardID: string): void {
 	let top: string = "";
 	let left: string = "";
 
-	if (cardElem.classList.contains("cardBack") && !controller.isOpenHands()) { animFlipCard(cardID); }
+	animFlipCard(cardElem, true);
 
 	switch (player) {
 		case Player.South:
@@ -293,14 +292,27 @@ function animPlayCard(player: Player, cardID: string): void {
 	animMoveCard(cardID, top, left);
 }
 
+function getCardElement(cardIdOrElement: string | HTMLElement): HTMLElement | null {
+	if (typeof (cardIdOrElement) === "string") {
+		return document.getElementById(cardIdOrElement);
+	} else {
+		return cardIdOrElement;
+	}
+}
+
 //check for class list and flip the other way too
 //correct this in doBidding
-function animFlipCard(cardID: string): void {
+function animFlipCard(cardIdOrElement: string | HTMLElement, faceUp: boolean): void {
 	if (!controller || controller.isStatMode()) { return; }
 
-	const cardElement = document.getElementById(cardID);
-	if (cardElement) {
-		cardElement.classList.toggle("cardBack");
+	const cardElement = getCardElement(cardIdOrElement);
+	if (!cardElement) {
+		return;
+	}
+	if (faceUp) {
+		cardElement.classList.remove("cardBack");
+	} else {
+		cardElement.classList.add("cardBack");
 	}
 }
 
@@ -336,7 +348,7 @@ function animWinTrick(player: Player, playedCards: PlayedCard[]): void {
 			const cardElem = document.getElementById(playedCard.card.id) as HTMLElement;
 			cardElem.style.top = top;
 			cardElem.style.left = left;
-			cardElem.classList.add("cardBack");
+			animFlipCard(cardElem, false);
 			setTimeout(animHideCard, 400, cardElem);
 		}
 	};
