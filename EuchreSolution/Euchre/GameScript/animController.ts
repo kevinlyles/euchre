@@ -8,7 +8,7 @@ enum AnimType {
 
 interface Animation {
 	readonly delay: number;
-	readonly callback: () => void;
+	readonly delegate: () => void;
 }
 
 const delays = {
@@ -28,14 +28,14 @@ class AnimController {
 		this.doDelays = doDelays;
 	}
 
-	public static queueAnimation(animType: AnimType, callback: () => void): void {
+	public static queueAnimation(animType: AnimType, delegate: () => void): void {
 		//animShowText("DEBUG: started queueAnimation", MessageLevel.Game, 4);
 		if (!this.doDelays) {
-			callback();
+			delegate();
 			//animShowText("DEBUG: ended queueAnimation, executed immediately", MessageLevel.Game, 4);
 			return;
 		}
-		const animation: Animation = { delay: delays[animType], callback };
+		const animation: Animation = { delay: delays[animType], delegate };
 		this.queuedAnimations.push(animation);
 		//animShowText("DEBUG: ended queueAnimation, queued", MessageLevel.Game, 4);
 		this.executeNextAnimation();
@@ -59,7 +59,7 @@ class AnimController {
 		const wrapper = () => {
 			//animShowText("DEBUG: started wrapper in executeNextAnimation", MessageLevel.Game, 4);
 			//animShowText("DEBUG: callback function: " + animation.callback.toString(), MessageLevel.Game, 4);
-			animation.callback();
+			animation.delegate();
 			this.running = false;
 			//animShowText("DEBUG: ended wrapper in executeNextAnimation", MessageLevel.Game, 4);
 			this.executeNextAnimation();

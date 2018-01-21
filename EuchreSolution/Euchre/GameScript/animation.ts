@@ -45,90 +45,80 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player,
 	const isOpenHands = settings.openHands;
 	const hasHooman = settings.hasHooman;
 
-	{
-		const trumpCandidateId = trumpCandidate.id;
-		const callback = () => {
-			animClearTable();
-			animPlaceDealerButt(dealer);
-			makeCardElem("deck");
-			makeCardElem(trumpCandidateId);
+	const trumpCandidateId = trumpCandidate.id;
+	const startDealDelegate = () => {
+		animClearTable();
+		animPlaceDealerButt(dealer);
+		makeCardElem("deck");
+		makeCardElem(trumpCandidateId);
+	};
+	AnimController.queueAnimation(AnimType.DealHands, startDealDelegate);
+
+	let player = dealer;
+	for (let i = 0; i < hands.length; i++) {
+		player = getNextPlayer(player);
+		const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
+		const dealThree = (dealer + i) % 2;
+		const cardsToDeal: string[] = [];
+
+		const playerCopy = player;
+		const dealFirstRoundDelegate = () => {
+			for (let j = 0; j < 2 + dealThree; j++) {
+				const cardID = hands[playerCopy][j].id;
+				const cardElem = makeCardElem(cardID);
+				if (hasHooman && playerCopy === Player.South) {
+					cardElem.addEventListener("click", clickCard);
+				}
+				cardsToDeal.push(cardID);
+			}
+
+			for (let j = 0; j < cardsToDeal.length; j++) {
+				animDealSingle(playerCopy, cardsToDeal[j], j, flippedUp);
+			}
 		};
-		AnimController.queueAnimation(AnimType.DealHands, callback);
+		AnimController.queueAnimation(AnimType.DealHands, dealFirstRoundDelegate);
+	}
+	for (let i = 0; i < hands.length; i++) {
+		player = getNextPlayer(player);
+		const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
+		const dealThree = (dealer + i) % 2;
+		const cardsToDeal: string[] = [];
+
+		const playerCopy = player;
+		const dealSecondRoundDelegate = () => {
+			for (let j = 2 + dealThree; j < hands[playerCopy].length; j++) {
+				const cardID = hands[playerCopy][j].id;
+				const cardElem = makeCardElem(cardID);
+				if (hasHooman && playerCopy === Player.South) {
+					cardElem.addEventListener("click", clickCard);
+				}
+				cardsToDeal.push(cardID);
+			}
+
+			for (let j = 0; j < cardsToDeal.length; j++) {
+				animDealSingle(playerCopy, cardsToDeal[j], j + 2 + dealThree, flippedUp);
+			}
+		};
+		AnimController.queueAnimation(AnimType.DealHands, dealSecondRoundDelegate);
 	}
 
-	{
-		const wrapper = () => {
-			let player = dealer;
-			for (let i = 0; i < hands.length; i++) {
-				player = getNextPlayer(player);
-				const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
-				const dealThree = (dealer + i) % 2;
-				const cardsToDeal: string[] = [];
+	const sortHandsDelegate = () => {
+		for (const _ of hands) {
+			player = getNextPlayer(player);
+			const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
 
-				for (let j = 0; j < 2 + dealThree; j++) {
-					const cardID = hands[player][j].id;
-					const cardElem = makeCardElem(cardID);
-					if (hasHooman && player === Player.South) {
-						cardElem.addEventListener("click", clickCard);
-					}
-					cardsToDeal.push(cardID);
-				}
-
-				const playerCopy = player;
-				const callback = () => {
-					for (let j = 0; j < cardsToDeal.length; j++) {
-						animDealSingle(playerCopy, cardsToDeal[j], j, flippedUp);
-					}
-				};
-				AnimController.queueAnimation(AnimType.DealHands, callback);
+			if (flippedUp) {
+				animSortHand(hands[player], player);
 			}
-			for (let i = 0; i < hands.length; i++) {
-				player = getNextPlayer(player);
-				const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
-				const dealThree = (dealer + i) % 2;
-				const cardsToDeal: string[] = [];
+		}
+	};
+	AnimController.queueAnimation(AnimType.DealHands, sortHandsDelegate);
 
-				for (let j = 2 + dealThree; j < hands[player].length; j++) {
-					const cardID = hands[player][j].id;
-					const cardElem = makeCardElem(cardID);
-					if (hasHooman && player === Player.South) {
-						cardElem.addEventListener("click", clickCard);
-					}
-					cardsToDeal.push(cardID);
-				}
-
-				const playerCopy = player;
-				const callback = () => {
-					for (let j = 0; j < cardsToDeal.length; j++) {
-						animDealSingle(playerCopy, cardsToDeal[j], j + 2 + dealThree, flippedUp);
-					}
-				};
-				AnimController.queueAnimation(AnimType.DealHands, callback);
-			}
-			{
-				const callback = () => {
-					for (const _ of hands) {
-						player = getNextPlayer(player);
-						const flippedUp = (isOpenHands || (hasHooman && player === Player.South));
-
-						if (flippedUp) {
-							animSortHand(hands[player], player);
-						}
-					}
-				};
-				AnimController.queueAnimation(AnimType.DealHands, callback);
-			}
-
-			{
-				const callback = () => {
-					animFlipCard(trumpCandidate.id, true);
-				};
-				AnimController.queueAnimation(AnimType.DealHands, callback);
-			}
-			callback();
-		};
-		AnimController.queueAnimation(AnimType.NoDelay, wrapper);
-	}
+	const showTrumpCandidateCallback = () => {
+		animFlipCard(trumpCandidateId, true);
+		callback();
+	};
+	AnimController.queueAnimation(AnimType.DealHands, showTrumpCandidateCallback);
 }
 
 function animDealSingle(player: Player, cardID: string, cardPos: number, flippedUp: boolean): void {
