@@ -60,6 +60,7 @@ class Game {
 		} else {
 			this.__dealer = getNextDealer(this.__dealer);
 		}
+		this.doGame();
 	}
 
 	private handleEndHand() {

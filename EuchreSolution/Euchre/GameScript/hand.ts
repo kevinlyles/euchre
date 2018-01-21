@@ -1,5 +1,4 @@
 enum HandStage {
-	Initializing,
 	Bidding,
 	Playing,
 	Finished,
@@ -57,11 +56,10 @@ function calculatePointGain(tricksTaken: number, maker: boolean, alone?: boolean
 
 class Hand {
 	//General stuff
-	private __settings: Settings;
 	private __dealer: Player;
 	private __playerHands: Card[][]; //2d array of everyone's hands
 	private __aiPlayers: (EuchreAI | null)[];
-	private __handStage: HandStage;
+	private __handStage = HandStage.Bidding;
 	private __waiting = false;
 
 	//Bidding related
@@ -111,7 +109,6 @@ class Hand {
 	constructor(doneCallback: () => void, dealer: Player,
 		aiPlayers: (EuchreAI | null)[], settings: Settings) {
 		this.__doneCallback = doneCallback;
-		this.__settings = settings;
 		this.__dealer = dealer;
 		this.__aiPlayers = aiPlayers;
 		let player = dealer;
@@ -122,11 +119,24 @@ class Hand {
 				aiPlayer.init(player);
 			}
 		}
+		//set up the deck and everyone's hands
+		const { deck, jacks } = getShuffledDeck();
+		this.__playerHands = [[], [], [], []];
+		dealHands(deck, this.__playerHands, this.__dealer);
+		this.__trumpCandidate = deck.pop() as Card;
+		this.__waiting = true;
+		//const callback = (result: BidResult | null) => this.bidComplete(result, this.endHand);
+		this.__bid = new Bid(this.bidComplete, this.__playerHands, jacks,
+			this.__aiPlayers, this.__dealer, this.__trumpCandidate);
+		const wrapper = () => {
+			this.__waiting = false;
+			this.doHand();
 
-		this.__handStage = HandStage.Initializing;
+		};
+		animDeal(this.__playerHands, this.__trumpCandidate, this.__dealer, settings, wrapper);
 	}
 
-	private bidComplete(result: BidResult | null): void {
+	private bidComplete(result: BidResult | null/*, endHandCallback: (completed: boolean) => void*/): void {
 		this.__waiting = false;
 		this.__bidResult = result;
 		if (result) {
@@ -136,6 +146,7 @@ class Hand {
 				this.__playerHands, this.__aiPlayers, result.maker, nextPlayer);
 			this.__handStage = HandStage.Playing;
 		} else {
+			//endHandCallback(false);
 			this.endHand(false);
 		}
 		this.doHand();
@@ -143,22 +154,6 @@ class Hand {
 
 	private advanceHand(): void {
 		switch (this.__handStage) {
-			case HandStage.Initializing:
-				//set up the deck and everyone's hands
-				const { deck, jacks } = getShuffledDeck();
-				this.__playerHands = [[], [], [], []];
-				dealHands(deck, this.__playerHands, this.__dealer);
-				this.__trumpCandidate = deck.pop() as Card;
-				this.__waiting = true;
-				animDeal(this.__playerHands, this.__trumpCandidate, this.__dealer, this.__settings, () => {
-					const callback = (result: BidResult | null) => this.bidComplete(result);
-					this.__bid = new Bid(callback, this.__playerHands, jacks,
-						this.__aiPlayers, this.__dealer, this.__trumpCandidate);
-					this.__handStage = HandStage.Bidding;
-					this.__waiting = false;
-					this.doHand();
-				});
-				break;
 			case HandStage.Bidding:
 				this.__bid.doBidding();
 				break;

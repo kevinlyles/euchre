@@ -1,72 +1,83 @@
-describe("HandSpec", function () {
-	const nullCallback = () => { return; };
-	let hand: Hand;
-	let aiPlayers: EuchreAI[];
-	let playerHands: Card[][];
-	let jacks: Card[];
-	let trumpCandidate: Card;
-	let bid: Bid;
+function setupHand(doneCallback: DoneFn | (() => void) = () => { return; }): {
+	aiPlayers: EuchreAI[],
+	bid: Bid,
+	hand: Hand,
+	jacks: Card[],
+	playerHands: Card[][],
+	trumpCandidate: Card,
+} {
+	const dealer = Player.South;
+	const aiPlayers = [new IdiotAI(), new IdiotAI(), new IdiotAI(), new IdiotAI()];
+	const settings: Settings = {
+		aiPlayers,
+		enableDefendAlone: false,
+		enableNoTrump: false,
+		hasHooman: false,
+		messageLevel: MessageLevel.Game,
+		numGamesToPlay: 1,
+		openHands: false,
+		showTrickHistory: false,
+		sound: false,
+		statMode: true,
+	};
+	const hand = new Hand(doneCallback, dealer, aiPlayers, settings);
+	const playerHands = [
+		[
+			new Card(Suit.Spades, Rank.Jack),
+			new Card(Suit.Clubs, Rank.Jack),
+			new Card(Suit.Spades, Rank.Ace),
+			new Card(Suit.Spades, Rank.King),
+			new Card(Suit.Spades, Rank.Queen),
+		],
+		[
+			new Card(Suit.Diamonds, Rank.Jack),
+			new Card(Suit.Diamonds, Rank.Ace),
+			new Card(Suit.Diamonds, Rank.King),
+			new Card(Suit.Diamonds, Rank.Queen),
+			new Card(Suit.Diamonds, Rank.Ten),
+		],
+		[
+			new Card(Suit.Hearts, Rank.Ace),
+			new Card(Suit.Hearts, Rank.King),
+			new Card(Suit.Hearts, Rank.Queen),
+			new Card(Suit.Hearts, Rank.Jack),
+			new Card(Suit.Hearts, Rank.Ten),
+		],
+		[
+			new Card(Suit.Clubs, Rank.Ace),
+			new Card(Suit.Clubs, Rank.King),
+			new Card(Suit.Clubs, Rank.Queen),
+			new Card(Suit.Clubs, Rank.Ten),
+			new Card(Suit.Spades, Rank.Nine),
+		],
+	];
+	(hand as any).__playerHands = playerHands;
+	const jacks = [
+		playerHands[0][1],
+		playerHands[1][0],
+		playerHands[2][4],
+		playerHands[0][0],
+	];
+	const trumpCandidate = new Card(Suit.Spades, Rank.Ten);
+	(hand as any).__trumpCandidate = trumpCandidate;
+	const bid = new Bid((hand as any).bidComplete, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
+	(hand as any).__bid = bid;
+	return {
+		aiPlayers,
+		bid,
+		hand,
+		jacks,
+		playerHands,
+		trumpCandidate,
+	};
+}
 
-	beforeEach(function () {
-		const dealer = Player.South;
-		aiPlayers = [new IdiotAI(), new IdiotAI(), new IdiotAI(), new IdiotAI()];
-		const settings: Settings = {
-			aiPlayers,
-			enableDefendAlone: false,
-			enableNoTrump: false,
-			hasHooman: false,
-			messageLevel: MessageLevel.Game,
-			numGamesToPlay: 1,
-			openHands: false,
-			showTrickHistory: false,
-			sound: false,
-			statMode: true,
-		};
-		hand = new Hand(dealer, aiPlayers, settings);
-		playerHands = [
-			[
-				new Card(Suit.Spades, Rank.Jack),
-				new Card(Suit.Clubs, Rank.Jack),
-				new Card(Suit.Spades, Rank.Ace),
-				new Card(Suit.Spades, Rank.King),
-				new Card(Suit.Spades, Rank.Queen),
-			],
-			[
-				new Card(Suit.Diamonds, Rank.Jack),
-				new Card(Suit.Diamonds, Rank.Ace),
-				new Card(Suit.Diamonds, Rank.King),
-				new Card(Suit.Diamonds, Rank.Queen),
-				new Card(Suit.Diamonds, Rank.Ten),
-			],
-			[
-				new Card(Suit.Hearts, Rank.Ace),
-				new Card(Suit.Hearts, Rank.King),
-				new Card(Suit.Hearts, Rank.Queen),
-				new Card(Suit.Hearts, Rank.Jack),
-				new Card(Suit.Hearts, Rank.Ten),
-			],
-			[
-				new Card(Suit.Clubs, Rank.Ace),
-				new Card(Suit.Clubs, Rank.King),
-				new Card(Suit.Clubs, Rank.Queen),
-				new Card(Suit.Clubs, Rank.Ten),
-				new Card(Suit.Spades, Rank.Nine),
-			],
-		];
-		(hand as any).__playerHands = playerHands;
-		jacks = [
-			playerHands[0][1],
-			playerHands[1][0],
-			playerHands[2][4],
-			playerHands[0][0],
-		];
-		trumpCandidate = new Card(Suit.Spades, Rank.Ten);
-		(hand as any).__trumpCandidate = trumpCandidate;
-		bid = new Bid(playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
-		(hand as any).__bid = bid;
-	});
+describe("HandSpec", function () {
+	jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
 
 	describe("Initial state", function () {
+		const { hand, playerHands, trumpCandidate } = setupHand();
+
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Bidding);
 		});
@@ -100,9 +111,18 @@ describe("HandSpec", function () {
 	});
 
 	describe("No one bids", function () {
-		beforeEach(function () {
-			hand.doHand(nullCallback, nullCallback);
+		let hand: Hand;
+		let playerHands: Card[][];
+		let trumpCandidate: Card;
+
+		beforeEach(function (done: DoneFn) {
+			const setup = setupHand(done);
+			hand = setup.hand;
+			playerHands = setup.playerHands;
+			trumpCandidate = setup.trumpCandidate;
+			hand.doHand();
 		});
+
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
 		});
@@ -136,10 +156,21 @@ describe("HandSpec", function () {
 	});
 
 	describe("Actually play a hand (ordered up)", function () {
-		beforeEach(function () {
+		let hand: Hand;
+		let playerHands: Card[][];
+		let trumpCandidate: Card;
+		let aiPlayers: EuchreAI[];
+
+		beforeEach(function (done: DoneFn) {
+			const setup = setupHand(done);
+			hand = setup.hand;
+			playerHands = setup.playerHands;
+			trumpCandidate = setup.trumpCandidate;
+			aiPlayers = setup.aiPlayers;
 			spyOn(aiPlayers[0], "chooseOrderUp").and.returnValue(true);
-			hand.doHand(nullCallback, nullCallback);
+			hand.doHand();
 		});
+
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
 		});
@@ -173,10 +204,16 @@ describe("HandSpec", function () {
 	});
 
 	describe("Trick winner leads next", function () {
-		beforeEach(function () {
+		let hand: Hand;
+		let aiPlayers: EuchreAI[];
+
+		beforeEach(function (done: DoneFn) {
+			const setup = setupHand(done);
+			hand = setup.hand;
+			aiPlayers = setup.aiPlayers;
 			spyOn(aiPlayers[0], "chooseOrderUp").and.returnValue(true);
 			spyOn(aiPlayers[0], "pickCard").and.callThrough();
-			hand.doHand(nullCallback, nullCallback);
+			hand.doHand();
 		});
 		it("Right player leads", function () {
 			const calls = (aiPlayers[0].pickCard as jasmine.Spy).calls;
@@ -189,10 +226,20 @@ describe("HandSpec", function () {
 	});
 
 	describe("Actually play a hand (ordered up alone)", function () {
-		beforeEach(function () {
+		let hand: Hand;
+		let playerHands: Card[][];
+		let trumpCandidate: Card;
+		let aiPlayers: EuchreAI[];
+
+		beforeEach(function (done: DoneFn) {
+			const setup = setupHand(done);
+			hand = setup.hand;
+			playerHands = setup.playerHands;
+			trumpCandidate = setup.trumpCandidate;
+			aiPlayers = setup.aiPlayers;
 			spyOn(aiPlayers[0], "chooseOrderUp").and.returnValue(true);
 			spyOn(aiPlayers[0], "chooseGoAlone").and.returnValue(true);
-			hand.doHand(nullCallback, nullCallback);
+			hand.doHand();
 		});
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
@@ -227,9 +274,19 @@ describe("HandSpec", function () {
 	});
 
 	describe("Actually play a hand (called)", function () {
-		beforeEach(function () {
+		let hand: Hand;
+		let playerHands: Card[][];
+		let trumpCandidate: Card;
+		let aiPlayers: EuchreAI[];
+
+		beforeEach(function (done: DoneFn) {
+			const setup = setupHand(done);
+			hand = setup.hand;
+			playerHands = setup.playerHands;
+			trumpCandidate = setup.trumpCandidate;
+			aiPlayers = setup.aiPlayers;
 			spyOn(aiPlayers[1], "pickTrump").and.returnValue(Suit.Diamonds);
-			hand.doHand(nullCallback, nullCallback);
+			hand.doHand();
 		});
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
@@ -264,10 +321,20 @@ describe("HandSpec", function () {
 	});
 
 	describe("Actually play a hand (called alone)", function () {
-		beforeEach(function () {
+		let hand: Hand;
+		let playerHands: Card[][];
+		let trumpCandidate: Card;
+		let aiPlayers: EuchreAI[];
+
+		beforeEach(function (done: DoneFn) {
+			const setup = setupHand(done);
+			hand = setup.hand;
+			playerHands = setup.playerHands;
+			trumpCandidate = setup.trumpCandidate;
+			aiPlayers = setup.aiPlayers;
 			spyOn(aiPlayers[1], "pickTrump").and.returnValue(Suit.Diamonds);
 			spyOn(aiPlayers[1], "chooseGoAlone").and.returnValue(true);
-			hand.doHand(nullCallback, nullCallback);
+			hand.doHand();
 		});
 		it("handStage", function () {
 			expect(hand.handStage()).toBe(HandStage.Finished);
@@ -303,6 +370,7 @@ describe("HandSpec", function () {
 
 	describe("getShuffledDeck", function () {
 		let deck: Card[];
+		let jacks: Card[];
 
 		beforeEach(function () {
 			const { deck: testDeck, jacks: testJacks } = getShuffledDeck();
@@ -427,7 +495,7 @@ describe("HandSpec", function () {
 		it("Calls init at the beginning", function () {
 			const testAI = new IdiotAI();
 			const initSpy = spyOn(testAI, "init");
-			aiPlayers = [testAI, testAI, testAI, testAI];
+			const aiPlayers = [testAI, testAI, testAI, testAI];
 			const settings: Settings = {
 				aiPlayers,
 				enableDefendAlone: false,
@@ -441,7 +509,7 @@ describe("HandSpec", function () {
 				statMode: true,
 			};
 			// tslint:disable-next-line:no-unused-expression
-			new Hand(Player.West, aiPlayers, settings);
+			new Hand(() => { return; }, Player.West, aiPlayers, settings);
 			expect(initSpy.calls.count()).toBe(4);
 			expect(initSpy.calls.argsFor(0)).toEqual([Player.North]);
 			expect(initSpy.calls.argsFor(1)).toEqual([Player.East]);
@@ -452,7 +520,21 @@ describe("HandSpec", function () {
 
 	describe("Human players", function () {
 		describe("Pauses for a human player", function () {
-			beforeEach(function () {
+			let hand: Hand;
+			let playerHands: Card[][];
+			let trumpCandidate: Card;
+			let aiPlayers: EuchreAI[];
+			let bid: Bid;
+			let jacks: Card[];
+
+			beforeEach(function (done: DoneFn) {
+				const setup = setupHand(done);
+				hand = setup.hand;
+				playerHands = setup.playerHands;
+				trumpCandidate = setup.trumpCandidate;
+				aiPlayers = setup.aiPlayers;
+				bid = setup.bid;
+				jacks = setup.jacks;
 				const mixedPlayers: Settings["aiPlayers"] = aiPlayers.slice();
 				mixedPlayers[0] = null;
 				const settings: Settings = {
@@ -467,13 +549,13 @@ describe("HandSpec", function () {
 					sound: false,
 					statMode: true,
 				};
-				hand = new Hand(Player.North, mixedPlayers, settings);
+				hand = new Hand(() => { return; }, Player.North, mixedPlayers, settings);
 				(hand as any).__playerHands = playerHands;
 				(hand as any).__trumpCandidate = trumpCandidate;
-				bid = new Bid(playerHands, jacks, mixedPlayers, Player.North, trumpCandidate);
+				bid = new Bid((hand as any).bidComplete, playerHands, jacks, mixedPlayers, Player.North, trumpCandidate);
 				(hand as any).__bid = bid;
 				spyOn(mixedPlayers[3], "chooseOrderUp").and.returnValue(true);
-				hand.doHand(nullCallback, nullCallback);
+				hand.doHand();
 			});
 
 			afterEach(function () {
