@@ -404,11 +404,11 @@ describe("BidSpec", function () {
 		let trumpCandidate: Card;
 		let bid: Bid;
 
-		beforeEach(function (done: DoneFn) {
+		beforeEach(function () {
 			aiPlayers = [doesNothingAI, doesNothingAI, doesNothingAI, doesNothingAI];
 			const { hands: playerHands, jacks } = copyHands(hands);
 			trumpCandidate = new Card(Suit.Spades, Rank.Nine);
-			bid = new Bid(done, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
+			bid = new Bid(() => { return; }, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
 		});
 
 		it("Does not update the jacks before trump is called", function () {
