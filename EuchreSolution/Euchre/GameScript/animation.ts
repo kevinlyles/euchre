@@ -7,9 +7,7 @@
 declare var controller: Controller | null;
 
 function makeCardElem(cardID: string): HTMLDivElement {
-	let card;
-
-	card = document.createElement("div");
+	const card = document.createElement("div");
 	card.className = "card";
 	card.id = cardID;
 	animFlipCard(card, false);
@@ -51,6 +49,11 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player,
 		animPlaceDealerButt(dealer);
 		makeCardElem("deck");
 		makeCardElem(trumpCandidateId);
+		for (const hand of hands) {
+			for (const card of hand) {
+				makeCardElem(card.id);
+			}
+		}
 	};
 	AnimController.queueAnimation(AnimType.DealHands, startDealDelegate);
 
@@ -65,7 +68,7 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player,
 		const dealFirstRoundDelegate = () => {
 			for (let j = 0; j < 2 + dealThree; j++) {
 				const cardID = hands[playerCopy][j].id;
-				const cardElem = makeCardElem(cardID);
+				const cardElem = getCardElement(cardID) as HTMLDivElement;
 				if (hasHooman && playerCopy === Player.South) {
 					cardElem.addEventListener("click", clickCard);
 				}
@@ -88,7 +91,7 @@ function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player,
 		const dealSecondRoundDelegate = () => {
 			for (let j = 2 + dealThree; j < hands[playerCopy].length; j++) {
 				const cardID = hands[playerCopy][j].id;
-				const cardElem = makeCardElem(cardID);
+				const cardElem = getCardElement(cardID) as HTMLDivElement;
 				if (hasHooman && playerCopy === Player.South) {
 					cardElem.addEventListener("click", clickCard);
 				}
