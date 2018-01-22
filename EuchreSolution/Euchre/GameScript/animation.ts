@@ -40,7 +40,10 @@ function animMoveCard(cardOrIdOrElement: Card | string | HTMLDivElement,
 function animDeal(hands: Card[][], trumpCandidate: Card, dealer: Player,
 	settings: Settings, callback: () => void): void {
 
-	if (!controller || controller.isStatMode()) { return; }
+	if (!controller || controller.isStatMode()) {
+		callback();
+		return;
+	}
 
 	const isOpenHands = settings.openHands;
 	const hasHooman = settings.hasHooman;
@@ -199,9 +202,7 @@ function animTakeTrump(trumpCandidate: Card, discard: Card, isAIPlayer: boolean)
 function animPlaceDealerButt(dealer: Player): void {
 	if (!controller || controller.isStatMode()) { return; }
 
-	let button;
-
-	button = document.getElementById("dealerButton");
+	let button = document.getElementById("dealerButton");
 	if (button === null) {
 		button = document.createElement("div");
 		button.id = "dealerButton";

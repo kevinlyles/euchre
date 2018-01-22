@@ -94,16 +94,12 @@ class Bid {
 
 		if (aiPlayer !== null) {
 			trump = this.doBidAI(aiPlayer, stage, hand);
-			if (trump === null) {
-				animShowText(`${message}passed.`, MessageLevel.Step, 1);
-				return null;
-			}
 		} else {
 			trump = this.doBidHooman(stage, hand);
-			if (trump === null) {
-				animShowText(`${message}passed.`, MessageLevel.Step, 1);
-				return null;
-			}
+		}
+		if (trump === null) {
+			animShowText(`${message}passed.`, MessageLevel.Step, 1);
+			return null;
 		}
 
 		this.setTrump(trump);

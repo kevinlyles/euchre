@@ -61,6 +61,7 @@ class Hand {
 	private __aiPlayers: (EuchreAI | null)[];
 	private __handStage = HandStage.Bidding;
 	private __waiting = false;
+	private __started = false;
 
 	//Bidding related
 	private __bid: Bid;
@@ -129,8 +130,9 @@ class Hand {
 			this.__aiPlayers, this.__dealer, this.__trumpCandidate);
 		const wrapper = () => {
 			this.__waiting = false;
-			this.doHand();
-
+			if (this.__started) {
+				this.doHand();
+			}
 		};
 		animDeal(this.__playerHands, this.__trumpCandidate, this.__dealer, settings, wrapper);
 	}
@@ -196,6 +198,7 @@ class Hand {
 
 	/* Public functions */
 	public doHand(): void {
+		this.__started = true;
 		while (!this.isFinished() && !pausedForHuman) {
 			this.advanceHand();
 			if (this.__waiting) {

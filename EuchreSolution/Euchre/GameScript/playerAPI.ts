@@ -105,9 +105,7 @@ function hasSuit(hand: Card[], suit: Suit): boolean {
 
 //**TESTED**
 function getCardValue(card: Card, trickSuit?: Suit, trump?: Suit): number {
-	let value;
-
-	value = card.rank;
+	let value = card.rank;
 	if (trump !== undefined && isTrump(card, trump)) {
 		value += 1000;
 	} else if (trickSuit !== undefined && followsSuit(card, trickSuit)) {
@@ -176,10 +174,9 @@ function getCardFromHand(hand: Card[], cardId: string): Card | null {
 function getWorstCardInHand(hand: Card[], trickSuit?: Suit, trump?: Suit): Card | null {
 	let worstCard = null;
 	let worstValue = 9999;
-	let value;
 
 	for (const card of hand) {
-		value = getCardValue(card, trickSuit, trump);
+		const value = getCardValue(card, trickSuit, trump);
 		if (value < worstValue) {
 			worstCard = card;
 			worstValue = value;
