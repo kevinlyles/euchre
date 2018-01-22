@@ -168,26 +168,32 @@ function animDealSingle(player: Player, cardOrIdOrElement: Card | string | HTMLD
 function animTakeTrump(trumpCandidate: Card, discard: Card, isAIPlayer: boolean): void {
 	if (!controller || controller.isStatMode()) { return; }
 
-	const discardElem = getCardElement(discard) as HTMLDivElement;
-	const trumpElem = getCardElement(trumpCandidate) as HTMLDivElement;
-	const top = discardElem.style.top as string;
-	const left = discardElem.style.left as string;
+	const discardElement = getCardElement(discard) as HTMLDivElement;
+	const trumpCandidateElement = getCardElement(trumpCandidate) as HTMLDivElement;
+	const top = discardElement.style.top as string;
+	const left = discardElement.style.left as string;
+	const zIndex = discardElement.style.zIndex as string;
 
-	animFlipCard(discardElem, false);
-	setTimeout(animMoveCard, 100, discardElem, "252px", "364px");
-	setTimeout(animHideCard, 400, discardElem);
+	animFlipCard(discardElement, false);
+	AnimController.queueAnimation(AnimType.Discard, () => {
+		animMoveCard(discardElement, "252px", "364px");
+	});
 
 	if (isAIPlayer && !controller.isOpenHands()) {
-		animFlipCard(trumpElem, false);
+		animFlipCard(trumpCandidateElement, false);
 	}
-	setTimeout(animMoveCard, 200, trumpElem, top, left, discardElem.style.zIndex);
-	animMoveCard(trumpElem, top, left, discardElem.style.zIndex as string);
+	AnimController.queueAnimation(AnimType.Discard, () => {
+		animMoveCard(trumpCandidateElement, top, left, zIndex);
+	});
+	if (!isAIPlayer) {
+		trumpCandidateElement.addEventListener("click", clickCard);
+		discardElement.removeEventListener("click", clickCard);
+	}
+	AnimController.queueAnimation(AnimType.Discard, () => {
+		animHideCard(discardElement);
+	});
 	//TODO: sort the hand again? Probably only if it's visible
 	//TODO: make it look the same even if the picked up card gets discarded
-	if (!isAIPlayer) {
-		trumpElem.addEventListener("click", clickCard);
-		discardElem.removeEventListener("click", clickCard);
-	}
 }
 
 function animPlaceDealerButt(dealer: Player): void {
@@ -326,7 +332,7 @@ function animFlipCard(cardOrIdOrElement: Card | string | HTMLDivElement, faceUp:
 function animWinTrick(player: Player, playedCards: PlayedCard[]): void {
 	if (!controller || controller.isStatMode()) { return; }
 
-	const callback = () => {
+	const moveDelegate = () => {
 		let top;
 		let left;
 
@@ -356,20 +362,30 @@ function animWinTrick(player: Player, playedCards: PlayedCard[]): void {
 			cardElem.style.top = top;
 			cardElem.style.left = left;
 			animFlipCard(cardElem, false);
-			setTimeout(animHideCard, 400, cardElem);
 		}
 	};
-	AnimController.queueAnimation(AnimType.WinTrick, callback);
+	AnimController.queueAnimation(AnimType.WinTrick, moveDelegate);
+	const hideDelegate = () => {
+		for (const playedCard of playedCards) {
+			animHideCard(playedCard.card);
+		}
+	};
+	AnimController.queueAnimation(AnimType.WinTrick, hideDelegate);
 }
 
 /*function animRemoveKitty(trumpCandidate: Card, trumpSuit: Suit): void {
 	if (!controller || controller.isStatMode()) { return; }
 
-	const deckElement = document.getElementById("deck");
-	setTimeout(animHideCard, 300, deckElement);
-	if (trumpCandidate.suit !== trumpSuit) { //trump candidate wasn't picked up
-		setTimeout(animHideCard, 300, trumpCandidate);
-	}
+	const deckElement = document.getElementById("deck") as HTMLDivElement;
+	const hideTrumpCandidate = trumpCandidate.suit !== trumpSuit;
+
+	const delegate = () => {
+		animHideCard(deckElement);
+		if (hideTrumpCandidate) {
+			animHideCard(trumpCandidate);
+		}
+	};
+	AnimController.queueAnimation(AnimType.DealHands, delegate);
 }*/
 
 function animHidePartnerHand(alonePlayer: Player, hands: Card[][]): void {
