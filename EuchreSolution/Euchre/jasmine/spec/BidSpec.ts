@@ -108,46 +108,69 @@ describe("BidSpec", function () {
 		],
 	];
 
-	it("Enforces card is in hand for discarding", function (done: DoneFn) {
-		const discard = new Card(Suit.Hearts, Rank.Nine);
-		const biddingAI = new BiddingTestAI(true, null, false, discard);
-		const testAI = new MultiAI(biddingAI, doesNothingAI);
-		const aiPlayers = [testAI, doesNothingAI, doesNothingAI, doesNothingAI];
-		const { hands: playerHands, jacks } = copyHands(hands);
-		const trumpCandidate = new Card(Suit.Spades, Rank.Nine);
-		const bid = new Bid(done, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
-		bid.doBidding();
-		expect(playerHands[0].length).toBe(5);
+	describe("Enforces card is in hand for discarding", function () {
+		let firstPlayerHand: Card[];
+
+		beforeEach(function (done: DoneFn) {
+			const discard = new Card(Suit.Hearts, Rank.Nine);
+			const biddingAI = new BiddingTestAI(true, null, false, discard);
+			const testAI = new MultiAI(biddingAI, doesNothingAI);
+			const aiPlayers = [testAI, doesNothingAI, doesNothingAI, doesNothingAI];
+			const { hands: playerHands, jacks } = copyHands(hands);
+			firstPlayerHand = playerHands[0];
+			const trumpCandidate = new Card(Suit.Spades, Rank.Nine);
+			const bid = new Bid(done, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
+			bid.doBidding();
+		});
+		it("Still discards something", function () {
+			expect(firstPlayerHand.length).toBe(5);
+		});
 	});
 
-	it("Allows discarding a valid card", function (done: DoneFn) {
-		const discard = new Card(Suit.Spades, Rank.Queen);
-		const biddingAI = new BiddingTestAI(true, null, false, discard);
-		const testAI = new MultiAI(biddingAI, doesNothingAI);
-		const aiPlayers = [testAI, doesNothingAI, doesNothingAI, doesNothingAI];
-		const { hands: playerHands, jacks } = copyHands(hands);
-		const trumpCandidate = new Card(Suit.Spades, Rank.Nine);
-		const bid = new Bid(done, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
-		bid.doBidding();
-		expect(playerHands[0].length).toBe(5);
-		for (const card of playerHands[0]) {
-			expect(card.id).not.toBe(discard.id);
-		}
+	describe("Allows discarding a valid card", () => {
+		let discard: Card;
+		let firstPlayerHand: Card[];
+
+		beforeEach((done: DoneFn) => {
+			discard = new Card(Suit.Spades, Rank.Queen);
+			const biddingAI = new BiddingTestAI(true, null, false, discard);
+			const testAI = new MultiAI(biddingAI, doesNothingAI);
+			const aiPlayers = [testAI, doesNothingAI, doesNothingAI, doesNothingAI];
+			const { hands: playerHands, jacks } = copyHands(hands);
+			firstPlayerHand = playerHands[0];
+			const trumpCandidate = new Card(Suit.Spades, Rank.Nine);
+			const bid = new Bid(done, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
+			bid.doBidding();
+		});
+		it("Discarded the right card", () => {
+			expect(firstPlayerHand.length).toBe(5);
+			for (const card of firstPlayerHand) {
+				expect(card.id).not.toBe(discard.id);
+			}
+		});
 	});
 
-	it("Allows discarding the trump candidate", function (done: DoneFn) {
-		const discard = new Card(Suit.Spades, Rank.Nine);
-		const biddingAI = new BiddingTestAI(true, null, false, discard);
-		const testAI = new MultiAI(biddingAI, doesNothingAI);
-		const aiPlayers = [testAI, doesNothingAI, doesNothingAI, doesNothingAI];
-		const { hands: playerHands, jacks } = copyHands(hands);
-		const trumpCandidate = new Card(Suit.Spades, Rank.Nine);
-		const bid = new Bid(done, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
-		bid.doBidding();
-		expect(playerHands[0].length).toBe(5);
-		for (const card of playerHands[0]) {
-			expect(card.id).not.toBe(discard.id);
-		}
+	describe("Allows discarding the trump candidate", () => {
+		let discard: Card;
+		let firstPlayerHand: Card[];
+
+		beforeEach((done: DoneFn) => {
+			discard = new Card(Suit.Spades, Rank.Nine);
+			const biddingAI = new BiddingTestAI(true, null, false, discard);
+			const testAI = new MultiAI(biddingAI, doesNothingAI);
+			const aiPlayers = [testAI, doesNothingAI, doesNothingAI, doesNothingAI];
+			const { hands: playerHands, jacks } = copyHands(hands);
+			firstPlayerHand = playerHands[0];
+			const trumpCandidate = new Card(Suit.Spades, Rank.Nine);
+			const bid = new Bid(done, playerHands, jacks, aiPlayers, Player.South, trumpCandidate);
+			bid.doBidding();
+		});
+		it("Discarded the right card", () => {
+			expect(firstPlayerHand.length).toBe(5);
+			for (const card of firstPlayerHand) {
+				expect(card.id).not.toBe(discard.id);
+			}
+		});
 	});
 
 	testBid(
